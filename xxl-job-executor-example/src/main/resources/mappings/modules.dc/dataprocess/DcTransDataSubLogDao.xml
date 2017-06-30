@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcTransDataSubLogDao">
+    
+	<sql id="dcTransDataSubLogColumns">		
+		a.ID AS id,
+		a.job_id as jobId,
+		a.sub_id as subId,
+		a.begin_time as beginTime,
+		a.end_time as endTime,
+		a.STATUS as status,
+		a.REMARKS AS "remarks",
+		a.CREATE_BY AS "createBy",
+		a.CREATE_DATE as "createDate",
+		a.UPDATE_BY AS "updateBy",
+		a.UPDATE_DATE AS "updateDate",
+		a.DEL_FLAG AS delFlag
+	</sql>
+	
+	<sql id="dcTransDataSubLogJoins">
+    </sql>
+    
+	<select id="get" resultType="dcTransDataSubLog">
+		SELECT
+			<include refid="dcTransDataSubLogColumns"/>
+		FROM dc_transData_sub_log a
+		<include refid="dcTransDataSubLogJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+    
+    <!-- 根据转换过程Id获取最近的处理日志 -->
+	<select id="getLatestProLog" resultType="dcTransDataSubLog">
+		SELECT
+			<include refid="dcTransDataSubLogColumns"/>
+		FROM dc_transData_sub_log a
+		<include refid="dcTransDataSubLogJoins"/>
+		WHERE a.sub_id = #{subId} 
+		ORDER BY BEGIN_TIME DESC 
+		LIMIT 0,1
+	</select>
+	
+	<!-- 查询数据列表 -->
+	<select id="findList" resultType="dcTransDataSubLog">
+		SELECT
+			<include refid="dcTransDataSubLogColumns"/>
+		  FROM dc_transData_sub_log a WHERE DEL_FLAG = #{DEL_FLAG_NORMAL}
+		<if test="jobId != null and jobId != ''"> AND  a.job_id = #{jobId}  </if>
+		<if test="subId != null and subId != ''"> AND  a.sub_id = #{subId}  </if>
+		<if test="status != null and status != ''"> AND a.STATUS = #{status} </if>
+		<!-- 数据范围过滤 -->
+		ORDER BY a.begin_time desc
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_transData_sub_log(
+			ID, 
+			JOB_ID, 
+			SUB_ID, 
+			BEGIN_TIME, 
+			END_TIME, 
+			REMARKS, 
+			STATUS, 
+			CREATE_BY, 
+			CREATE_DATE, 
+			UPDATE_BY, 
+			UPDATE_DATE, 
+			DEL_FLAG
+		) VALUES (
+			#{id}, 
+			#{jobId}, 
+			#{subId}, 
+			#{beginTime}, 
+			#{endTime}, 
+			#{remarks}, 
+			#{status}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_transData_sub_log 
+		<set>
+			<if test="jobId != null"> job_id = #{jobId}, </if>
+			<if test="subId != null"> sub_id = #{subId}, </if>
+			<if test="beginTime != null"> begin_time = #{beginTime}, </if>
+			<if test="endTime != null"> end_time = #{endTime}, </if>
+			<if test="status != null"> STATUS = #{status}, </if>
+			<if test="remarks != null"> remarks = #{remarks}, </if>
+			<if test="updateBy.id != null"> update_by = #{updateBy.id}, </if>
+			<if test="updateDate != null"> update_date = #{updateDate} </if>
+		</set>	
+		WHERE ID = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_transData_sub_log 
+		WHERE ID = #{id} 
+	</update>
+	
+	<update id="deleteByLogic">
+		UPDATE dc_transData_sub_log SET 
+			DEL_FLAG = #{DEL_FLAG_DELETE}
+		WHERE ID = #{id} 
+	</update>
+	
+</mapper>

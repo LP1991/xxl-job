@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataexport.dao.DcDataInterfaceLogDao">
+    
+	<sql id="dcDataInterfaceLogColumns">
+		a.INTF_ID AS "intfId",
+		a.CALL_PARAM AS "callParam",
+		a.RTN_FIELDS AS "rtnFields",
+		a.CLINT_IP AS "clintIp",
+		a.START_TIME AS "startTime",
+		a.END_TIME AS "endTime",
+		a.RESPONSE_TIME AS "responseTime",
+		a.RST_FLAG AS "rstFlag",
+		a.RST_MSG AS "rstMsg",
+		a.REMARKS AS "remarks"
+	</sql>
+
+	<sql id="dcDataInterfaceLogJoins">
+		LEFT JOIN SYS_USER b on a.CALL_BY = b.ID
+	</sql>
+
+	<select id="get" resultType="DcDataInterfaceLog" >
+		SELECT 
+			<include refid="dcDataInterfaceLogColumns"/>
+			,a.CALL_BY AS "callBy"
+		FROM dc_data_interface_log a
+		<include refid="dcDataInterfaceLogJoins"/>
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findList" resultType="DcDataInterfaceLog" >
+		SELECT 
+			<include refid="dcDataInterfaceLogColumns"/>
+			,b.`name` AS "callBy"
+		FROM dc_data_interface_log a
+		<include refid="dcDataInterfaceLogJoins"/>
+		<where>
+			1=1
+			<if test="intfId != null"> and INTF_ID = #{intfId} </if>
+			<if test="callBy != null"> and CALL_BY = #{callBy} </if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.START_TIME DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DcDataInterfaceLog" >
+		SELECT 
+			<include refid="dcDataInterfaceLogColumns"/>
+			,b.`name` AS "callBy"
+		FROM dc_data_interface_log a
+		<include refid="dcDataInterfaceLogJoins"/>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_data_interface_log(
+			INTF_ID,
+			CALL_BY,
+			CALL_PARAM,
+			RTN_FIELDS,
+			CLINT_IP,
+			START_TIME,
+			END_TIME,
+			RESPONSE_TIME,
+			RST_FLAG,
+			RST_MSG,
+			REMARKS
+		) VALUES (
+			#{intfId},
+			#{callBy},
+			#{callParam},
+			#{rtnFields},
+			#{clintIp},
+			#{startTime},
+			#{endTime},
+			#{responseTime},
+			#{rstFlag},
+			#{rstMsg},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_data_interface_log 
+		<set>
+			<if test="intfId != null"> INTF_ID = #{intfId}, </if>
+			<if test="callBy != null"> CALL_BY = #{callBy}, </if>
+			<if test="callParam != null"> CALL_PARAM = #{callParam}, </if>
+			<if test="rtnFields != null"> RTN_FIELDS = #{rtnFields}, </if>
+			<if test="clintIp != null"> CLINT_IP = #{clintIp}, </if>
+			<if test="startTime != null"> START_TIME = #{startTime}, </if>
+			<if test="endTime != null"> END_TIME = #{endTime}, </if>
+			<if test="endTime != null"> RESPONSE_TIME = #{responseTime}, </if>
+			<if test="rstFlag != null"> RST_FLAG = #{rstFlag}, </if>
+			<if test="rstMsg != null"> RST_MSG = #{rstMsg}, </if>
+			<if test="remarks != null"> REMARKS = #{remarks} </if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_data_interface_log WHERE INTF_ID = #{intfId}
+	</update>
+
+</mapper>

@@ -31,7 +31,7 @@ public class DemoJobHandlerTest {
         triggerParam.setLogDateTim(System.currentTimeMillis());
 
         // do remote trigger
-        ExecutorBiz executorBiz = (ExecutorBiz) new NetComClientProxy(ExecutorBiz.class, "127.0.0.1:9999").getObject();
+        ExecutorBiz executorBiz = (ExecutorBiz) new NetComClientProxy(ExecutorBiz.class, "127.0.0.1:11001").getObject();
         ReturnT<String> runResult = executorBiz.run(triggerParam);
     }
 

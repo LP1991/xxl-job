@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcHiveTableDao">
+    
+	<sql id="dcHiveTableColumns">
+		a.ID AS "id",
+		a.TABLE_NAME AS "tableName",
+		a.TABLE_DESC AS "tableDesc",
+		a.TABLE_SPACE AS "tableSpace",
+		a.SEPARATOR_SIGN AS "separatorSign",
+		a.OWNER AS "owner",
+		a.TABLE_TYPE AS "tableType",
+		a.LOCATION AS "location",
+		a.ISLOAD_DATA As"isLoadData",
+		a.CREATE_TIME as "createTime",
+		a.STATUS as "status"
+	</sql>
+	
+	<sql id="dcHiveTableJoins">
+	</sql>
+    
+	<select id="get" resultType="DcHiveTable" >
+		SELECT 
+			<include refid="dcHiveTableColumns"/>
+		FROM dc_hive_table a
+		<include refid="dcHiveTableJoins"/>
+		WHERE 1=1 
+		<if test="id != null and id != ''"> AND a.ID= #{id} </if>
+		<if test="tableName != null and tableName != ''"> AND a.TABLE_NAME = #{tableName} </if>
+	</select>
+		
+	<select id="findList" resultType="DcHiveTable" >
+		SELECT 
+			<include refid="dcHiveTableColumns"/>
+		FROM dc_hive_table a
+		<include refid="dcHiveTableJoins"/>
+		<where>
+		<if test="tableName != null and tableName != ''"> AND a.TABLE_NAME like CONCAT('%', #{tableName}, '%') </if>
+		<if test="tableSpace != null and tableSpace != ''"> AND a.TABLE_SPACE like CONCAT('%', #{tableSpace}, '%') </if>
+		<if test="status != null and status != ''"> AND a.STATUS = #{status} </if>
+		</where>
+		order by a.CREATE_TIME DESC
+	</select>
+	
+	<select id="findAllList" resultType="DcHiveTable" >
+		SELECT 
+			<include refid="dcHiveTableColumns"/>
+		FROM dc_hive_table a
+		<include refid="dcHiveTableJoins"/>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.CREATE_TIME DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_hive_table(
+		    ID,
+			TABLE_NAME,
+			TABLE_DESC,
+			TABLE_SPACE,
+			SEPARATOR_SIGN,
+			OWNER,
+			TABLE_TYPE,
+			LOCATION,
+			ISLOAD_DATA,
+			CREATE_TIME,
+			STATUS
+		) VALUES (
+		     #{id,jdbcType=VARCHAR},
+			#{tableName,jdbcType=VARCHAR},
+			#{tableDesc,jdbcType=VARCHAR},
+			#{tableSpace,jdbcType=VARCHAR},
+			#{separatorSign,jdbcType=VARCHAR},
+			#{owner,jdbcType=VARCHAR},
+			#{tableType,jdbcType=VARCHAR},
+			#{location,jdbcType=VARCHAR},
+			#{isLoadData,jdbcType=VARCHAR},
+			#{createTime,jdbcType=TIMESTAMP},
+			#{status,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<!-- 批量插入链路关系 -->
+	<insert id="batchInsert" parameterType="java.util.List">
+		INSERT INTO dc_hive_table (
+		     ID,
+			TABLE_NAME,
+			TABLE_DESC,
+			TABLE_SPACE,
+			SEPARATOR_SIGN,
+			OWNER,
+			TABLE_TYPE,
+			LOCATION,
+			ISLOAD_DATA,
+			CREATE_TIME,
+			STATUS
+		) values
+		<foreach collection="list" item="item" index="index" separator="," >  
+		(    #{item.id,jdbcType=VARCHAR},
+			#{item.tableName,jdbcType=VARCHAR},
+			#{item.tableDesc,jdbcType=VARCHAR},
+			#{item.tableSpace,jdbcType=VARCHAR},
+			#{item.separatorSign,jdbcType=VARCHAR},
+			#{item.owner,jdbcType=VARCHAR},
+			#{item.tableType,jdbcType=VARCHAR},
+			#{item.location,jdbcType=VARCHAR},
+			#{item.isLoadData,jdbcType=VARCHAR},
+			#{item.createTime,jdbcType=TIMESTAMP},
+			#{item.status,jdbcType=VARCHAR}
+		)
+		</foreach> 
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_hive_table 
+		<set>
+			<if test="tableName != null"> TABLE_NAME = #{tableName,jdbcType=VARCHAR}, </if>  
+			<if test="tableDesc != null"> TABLE_DESC = #{tableDesc,jdbcType=VARCHAR}, </if>  
+			<if test="tableSpace != null"> TABLE_SPACE = #{tableSpace,jdbcType=VARCHAR}, </if>  
+			<if test="separatorSign != null"> SEPARATOR_SIGN = #{separatorSign,jdbcType=VARCHAR}, </if>  
+			<if test="owner != null"> OWNER= # {owner,jdbcType=VARCHAR}, </if>  
+			<if test="tableType != null"> TABLE_TYPE=#{tableType,jdbcType=VARCHAR}, </if>  
+			<if test="location != null"> LOCATION = #{location,jdbcType=VARCHAR}, </if>  
+			<if test="isLoadData != null"> ISLOAD_DATA = #{isLoadData,jdbcType=VARCHAR}, </if>  
+			<if test="createTime != null"> CREATE_TIME = #{createTime,jdbcType=TIMESTAMP}, </if>  
+			<if test="status != null"> STATUS = #{status,jdbcType=VARCHAR} </if>  
+		</set>	
+		WHERE ID= #{id,jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 验证jobname不重复 -->
+	<select id="getTableName" resultType="dcHiveTable">
+		SELECT
+			<include refid="dcHiveTableColumns"/>
+		FROM dc_hive_table a
+		<include refid="dcHiveTableJoins"/>
+		WHERE a.TABLE_NAME = #{tableName}
+	</select>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_hive_table
+		WHERE ID = #{id}
+	</update>
+
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录
+	<select id="findUniqueByProperty" resultType="DcHiveTable" statementType="STATEMENT">
+		select * FROM dc_hive_table  where ${propertyName} = '${value}'
+	</select> -->
+	
+</mapper>

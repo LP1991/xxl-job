@@ -78,6 +78,6 @@ public class JobRegistryMonitorHelper {
 	public static List<String> discover(String registryGroup, String registryKey){
 		String groupKey = makeGroupKey(registryGroup, registryKey);
 		return instance.registMap.get(groupKey);
-	}
+}
 	
 }

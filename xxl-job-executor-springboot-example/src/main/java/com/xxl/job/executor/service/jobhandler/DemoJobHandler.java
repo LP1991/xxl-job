@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  */
 @JobHander(value="demoJobHandler")
 @Service
-public class DemoJobHandler extends IJobHandler {
+public class DemoJobHandler implements IJobHandler {
 
 	@Override
 	public ReturnT<String> execute(String... params) throws Exception {

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcHiveFieldDao">
+    
+	<sql id="dcHiveFieldColumns">
+		a.ID AS "id",
+		a.BELONG2_ID AS "belong2Id",
+		a.FIELD_NAME AS "fieldName",
+		a.FIELD_DESC AS "fieldDesc",
+		a.FIELD_TYPE AS "fieldType",
+		a.IS_KEY AS "isKey",
+		a.SORT_NUM AS "sortNum",
+		a.REMARKS AS "remarks"
+	</sql>
+	
+	<sql id="dcHiveFieldJoins">
+	</sql>
+    
+	<select id="get" resultType="DcHiveField" >
+		SELECT 
+			<include refid="dcHiveFieldColumns"/>
+		FROM dc_hive_field a
+		<include refid="dcHiveFieldJoins"/>
+		WHERE a.ID= #{id}
+	</select>
+		
+	<select id="findList" resultType="DcHiveField" >
+		SELECT 
+			<include refid="dcHiveFieldColumns"/>
+		FROM dc_hive_field a
+		<include refid="dcHiveFieldJoins"/>
+		<where>
+			 <if test="id != null and id != ''"> ID = #{id} </if> 
+			 <if test="belong2Id != null and belong2Id != ''"> BELONG2_ID = #{belong2Id} </if> 
+		</where>	
+		order by a.BELONG2_ID, a.SORT_NUM
+	</select>
+	
+	<select id="findAllList" resultType="DcHiveField" >
+		SELECT 
+			<include refid="dcHiveFieldColumns"/>
+		FROM dc_hive_field a
+		<include refid="dcHiveFieldJoins"/>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.BELONG2_ID, a.SORT_NUM
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_hive_field(
+		  ID,
+		BELONG2_ID,
+		FIELD_NAME,
+		FIELD_DESC,
+		FIELD_TYPE,
+		IS_KEY,
+		SORT_NUM ,
+		REMARKS 
+		) VALUES (
+		    #{id,jdbcType=VARCHAR},
+			#{belong2Id,jdbcType=VARCHAR},
+			#{fieldName,jdbcType=VARCHAR},
+			#{fieldDesc,jdbcType=VARCHAR},
+			#{fieldType,jdbcType=VARCHAR},
+			#{isKey,jdbcType=VARCHAR},
+			#{sortNum,jdbcType=VARCHAR},
+			#{remarks,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+		<!-- 批量插入链路关系 -->
+	<insert id="batchInsert" parameterType="java.util.List">
+		INSERT INTO dc_hive_field (
+			  ID,
+		BELONG2_ID,
+		FIELD_NAME,
+		FIELD_DESC,
+		FIELD_TYPE,
+		IS_KEY,
+		SORT_NUM ,
+		REMARKS 
+		) values
+		<foreach collection="list" item="item" index="index" separator="," >  
+		(    #{item.id,jdbcType=VARCHAR},
+			#{item.belong2Id,jdbcType=VARCHAR},
+			#{item.fieldName,jdbcType=VARCHAR},
+			#{item.fieldDesc,jdbcType=VARCHAR},
+			#{item.fieldType,jdbcType=VARCHAR},
+			#{item.isKey,jdbcType=VARCHAR},
+			#{item.sortNum,jdbcType=VARCHAR},
+			#{item.remarks,jdbcType=VARCHAR}
+		)
+		</foreach> 
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_hive_field SET 	
+			  ID= #{id,jdbcType=VARCHAR},
+		BELONG2_ID=#{belong2Id,jdbcType=VARCHAR},
+		FIELD_NAME=#{fieldName,jdbcType=VARCHAR},
+		FIELD_DESC=#{fieldDesc,jdbcType=VARCHAR},
+		FIELD_TYPE=#{fieldType,jdbcType=VARCHAR},
+		IS_KEY=#{isKey,jdbcType=VARCHAR},
+		SORT_NUM =#{sortNum,jdbcType=VARCHAR},
+		REMARKS= #{remarks,jdbcType=VARCHAR}
+		WHERE ID= #{id}
+	</update>
+	
+	<!-- 验证jobname不重复 -->
+	<select id="getFieldName" resultType="dcHiveField">
+		SELECT
+			<include refid="dcHiveFieldColumns"/>
+		FROM dc_hive_field a
+		<include refid="dcHiveFieldJoins"/>
+		WHERE a.FIELD_NAME = #{fieldName}
+	</select>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_hive_field
+		WHERE ID = #{id}
+	</update>
+	
+	<update id="deleteByBelong2Id">
+		DELETE FROM dc_hive_field WHERE BELONG2_ID = #{belong2Id}
+	</update>
+
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录
+	<select id="findUniqueByProperty" resultType="DcHiveField" statementType="STATEMENT">
+		select * FROM dc_hive_field  where ${propertyName} = '${value}'
+	</select> -->
+	
+	<select id="countByBelong2Id" resultType="String">
+		select count(1) as count from dc_hive_field where BELONG2_ID = #{belong2Id}
+	</select>
+	<select id="getFieldNameAndType" resultType="dcHiveField">
+		select FIELD_NAME AS 'fieldName',FIELD_TYPE as 'fieldType',FIELD_DESC AS 'fieldDesc' from dc_hive_field where BELONG2_ID =  #{belong2Id}
+	</select>
+	
+	
+</mapper>

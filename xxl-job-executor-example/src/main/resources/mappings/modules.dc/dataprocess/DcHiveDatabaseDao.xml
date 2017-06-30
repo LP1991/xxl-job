@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcHiveDatabaseDao">
+	
+    
+	<sql id="dcHiveDatabaseColumns">
+		a.ID As "id",
+		a.DATABASESPACE As "database",
+		a.REMARKS AS "remarks",
+		a.CREATE_BY AS "createBy.id",
+		a.CREATE_DATE as "createDate",
+		a.UPDATE_BY AS "updateBy.id",
+		a.UPDATE_DATE as "updateDate",
+		a.DEL_FLAG as "delFlag"
+		<!-- p.name AS "parent.name" -->
+	</sql>
+	
+	<sql id="dcHiveDatabaseJoins">
+		<!-- LEFT JOIN dc_hive_database p ON p.id = a.parent_id -->
+    </sql>
+    
+		<select id="findList" resultType="DcHiveDatabase">
+		SELECT
+			<include refid="dcHiveDatabaseColumns"/>
+		FROM dc_hive_database a
+		<include refid="dcHiveDatabaseJoins"/>
+		WHERE a.DEL_FLAG = #{DEL_FLAG_NORMAL}
+			ORDER by a.UPDATE_DATE DESC
+	</select>
+	
+	
+	<select id="get" resultType="DcHiveDatabase">
+		SELECT
+			<include refid="dcHiveDatabaseColumns"/>
+		FROM dc_hive_database a
+		<include refid="dcHiveDatabaseJoins"/>
+		WHERE a.id = #{id}
+		AND a.DEL_FLAG = #{DEL_FLAG_NORMAL}
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_hive_database(
+			ID, 
+			DATABASESPACE,
+			REMARKS, 
+			CREATE_BY, 
+			CREATE_DATE, 
+			UPDATE_BY, 
+			UPDATE_DATE, 
+			DEL_FLAG
+		) VALUES (
+			#{id}, 
+			#{database}, 
+			#{remarks}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_hive_database SET 
+			ID = #{id}, 
+			DATABASESPACE = #{database}, 
+			UPDATE_BY = #{updateBy.id}, 
+			UPDATE_DATE = #{updateDate}, 
+			REMARKS = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- <update id="updateSort">
+		UPDATE dc_hive_database SET 
+			sort = #{sort}
+		WHERE id = #{id}
+	</update> -->
+	
+	<update id="delete">
+		DELETE FROM dc_hive_database 
+		WHERE ID = #{id} 
+	</update>
+	
+	<update id="deleteByLogic">
+		UPDATE dc_hive_database SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE ID = #{id}
+	</update>
+	
+	<select id="byDatabaseGet" resultType="DcHiveDatabase">
+		SELECT
+			<include refid="dcHiveDatabaseColumns"/>
+		FROM dc_hive_database a
+		<include refid="dcHiveDatabaseJoins"/>
+		WHERE a.DEL_FLAG = #{DEL_FLAG_NORMAL} AND DATABASESPACE = #{database}
+	</select>
+	
+		<!-- 验证database不重复 -->
+	<select id="getDatabaseName" resultType="DcHiveDatabase">
+		SELECT
+			<include refid="dcHiveDatabaseColumns"/>
+		FROM dc_hive_database a
+		<include refid="dcHiveDatabaseJoins"/>
+		WHERE a.DATABASESPACE = #{database}
+		AND a.DEL_FLAG = 0
+	</select>
+</mapper>

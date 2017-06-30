@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.metadata.dao.DcDataSourceDao">
+    
+	<sql id="dcDataSourceColumns">
+		a.id AS "id",
+		a.conn_Name AS "connName",
+		a.conn_Desc AS "connDesc",
+		a.server_Type AS "serverType",
+		a.server_IP AS "serverIP",
+		a.server_Port AS "serverPort",
+		a.server_Name AS "serverName",
+		a.server_Url AS "serverUrl",
+		a.driver_Class AS "driverClass",
+		a.server_User AS "serverUser",
+		a.server_Pswd AS "serverPswd",
+		a.sort_Num AS "sortNum",
+		a.status AS "status",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="dcDataSourceJoins">
+	LEFT JOIN sys_user u ON u.id = a.create_by
+	LEFT JOIN sys_office o ON o.id = u.office_id
+	</sql>
+    
+	<select id="get" resultType="DcDataSource" >
+		SELECT 
+			<include refid="dcDataSourceColumns"/>
+		FROM dc_data_source a
+		<include refid="dcDataSourceJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DcDataSource" >
+		SELECT 
+			<include refid="dcDataSourceColumns"/>
+		FROM dc_data_source a
+		<include refid="dcDataSourceJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="id != null and id != ''"> AND a.id = #{id} </if>
+			<if test="connName != null and connName != ''"> AND instr(a.CONN_NAME, #{connName})>0 </if>
+			<if test="serverType != null and serverType != ''"> AND a.SERVER_TYPE = #{serverType} </if>
+		</where>
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''"> ORDER BY ${page.orderBy} </when>
+			<otherwise> ORDER BY a.update_date DESC </otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DcDataSource" >
+		SELECT 
+			<include refid="dcDataSourceColumns"/>
+		FROM dc_data_source a
+		<include refid="dcDataSourceJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+<select id="getlist" resultType="DcDataSource" >
+	SELECT
+	a.from_link AS 'fromLink',
+       t.id AS 'id'
+	FROM
+		DC_JOB_TRANSDATA a
+       LEFT JOIN DC_DATA_SOURCE t ON t.id=a.from_link
+	<where>
+		a.DEL_FLAG = '0'AND
+	t.ID=#{id}
+	</where>
+</select>
+	<insert id="insert">
+		INSERT INTO dc_data_source(
+			id,
+			CONN_NAME,
+			CONN_DESC,
+			SERVER_TYPE,
+			SERVER_IP,
+			SERVER_PORT,
+			SERVER_NAME,
+			DRIVER_CLASS,
+			SERVER_URL,
+			SERVER_USER,
+			SERVER_PSWD,
+			STATUS,
+			SORT_NUM,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{connName},
+			#{connDesc},
+			#{serverType},
+			#{serverIP},
+			#{serverPort},
+			#{serverName},
+			#{driverClass},
+			#{serverUrl},
+			#{serverUser},
+			#{serverPswd},
+			#{status},
+			#{sortNum},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_data_source 
+		<set>
+			<if test="connName != null"> CONN_NAME = #{connName}, </if>
+			<if test="connDesc != null"> CONN_DESC = #{connDesc}, </if>
+			<if test="serverType != null"> SERVER_TYPE = #{serverType}, </if>
+			<if test="serverIP != null"> SERVER_IP = #{serverIP}, </if>
+			<if test="serverPort != null"> SERVER_PORT = #{serverPort}, </if>
+			<if test="serverName != null"> SERVER_NAME = #{serverName}, </if>
+			<if test="driverClass != null"> DRIVER_CLASS = #{driverClass}, </if>
+			<if test="serverUrl != null"> SERVER_URL = #{serverUrl}, </if>
+			<if test="serverUser != null"> SERVER_USER = #{serverUser}, </if>
+			<if test="serverPswd != null"> SERVER_PSWD = #{serverPswd}, </if>
+			<if test="status != null"> STATUS = #{status}, </if>
+			<if test="sortNum != null"> SORT_NUM = #{sortNum}, </if>
+			<if test="remarks != null"> remarks = #{remarks}, </if>
+			<if test="updateBy.id != null"> update_by = #{updateBy.id}, </if>
+			<if test="updateDate != null"> update_date = #{updateDate} </if>
+		</set>	
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_data_source
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE dc_data_source SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="DcDataSource" statementType="STATEMENT">
+		select * FROM dc_data_source  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

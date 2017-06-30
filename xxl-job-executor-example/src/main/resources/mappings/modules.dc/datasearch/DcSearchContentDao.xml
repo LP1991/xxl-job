@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.datasearch.dao.DcSearchContentDao">
+	
+    
+	<sql id="dcSearchContentColumns">
+		a.ID As "id",
+		a.CATA_ITEM_ID AS "cataItemId",
+		a.CATA_NAME AS "cataName",
+		a.CATA_CODE AS "cataCode",
+		a.CATA_FULLPATH AS "parentIds",
+		a.PARENT_ID AS "parent.id",
+		a.STATUS AS "status",
+		a.REMARKS AS "remarks",
+		a.CREATE_BY AS "createBy.id",
+		a.CREATE_DATE as "createDate",
+		a.UPDATE_BY AS "updateBy.id",
+		a.UPDATE_DATE as "updateDate",
+		a.DEL_FLAG as "delFlag"
+		<!-- p.name AS "parent.name" -->
+	</sql>
+	
+	<sql id="dcSearchContentJoins">
+		<!-- LEFT JOIN dc_cata_detail p ON p.id = a.parent_id -->
+    </sql>
+	
+	<select id="get"  resultType="dcSearchContent">
+		SELECT
+			<include refid="dcSearchContentColumns"/>
+		FROM dc_cata_detail a
+		<include refid="dcSearchContentJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="getUnmark"  resultType="dcSearchContent">
+		SELECT
+			<include refid="dcSearchContentColumns"/>
+		FROM dc_cata_detail a
+		<include refid="dcSearchContentJoins"/>
+		<where>
+			a.CATA_NAME = "未分类对象"
+			<if test="id != null and id != ''">
+				AND a.CATA_ITEM_ID = (SELECT CATA_ITEM_ID from dc_cata_detail where ID = #{id})
+			</if>
+		</where>
+		
+	</select>
+
+	<select id="getCatalogRefById"  resultType="string">
+		SELECT
+			ref.OBJ_ID
+		FROM dc_obj_cata_ref ref
+		WHERE ref.CATA_ID = #{id}
+
+	</select>
+	
+	<select id="findUniqueByProperty"  resultType="dcSearchContent" statementType="STATEMENT">
+		select * from dc_cata_detail where ${propertyName} = ${value} 
+	</select>
+	<!-- 取出源数据分类中的分类明细的单条数据 -->
+		<select id="findUniqueByPr"  resultType="dcSearchContent" statementType="STATEMENT">
+		select * from dc_cata_detail where ${propertyName} = ${value} and CATA_ITEM_ID =${cataItemId}
+	</select>
+	
+	<select id="getChildren" parameterType="String" resultType="dcSearchContent">  
+        select * from dc_cata_detail where parent_id = #{id} <!-- ORDER BY sort --> 
+    </select>  
+    <select id="getParent" parameterType="String" resultType="dcSearchContent">  
+        select * from dc_cata_detail where id = #{id}  
+    </select>  
+	<select id="findAllList" resultType="dcSearchContent">
+		SELECT
+			<include refid="dcSearchContentColumns"/>
+		FROM dc_cata_detail a
+		<include refid="dcSearchContentJoins"/>
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+		<!-- ORDER BY a.sort -->
+	</select>
+	
+	<select id="getSameLevelDcSearchContents" parameterType="String" resultType="dcSearchContent">
+		SELECT
+			<include refid="dcSearchContentColumns"/>
+		FROM dc_cata_detail a
+		<include refid="dcSearchContentJoins"/>
+		WHERE a.del_flag = 'N' and a.parent_id = #{parentId}  
+		<!-- ORDER BY a.sort -->
+	</select>
+	
+	<select id="findByParentIdsLike"  resultType="dcSearchContent">
+		SELECT
+			<include refid="dcSearchContentColumns"/>
+		FROM dc_cata_detail a
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+		<if test="parentIds != null and parentIds != ''">
+			AND a.CATA_FULLPATH LIKE #{parentIds} 
+		</if>
+		<if test="cataItemId != null and cataItemId != ''">
+			AND a.CATA_ITEM_ID LIKE #{cataItemId}
+		</if>
+		<!-- ORDER BY a.sort -->
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_cata_detail(
+			ID, 
+			CATA_ITEM_ID, 
+			CATA_NAME, 
+			CATA_CODE, 
+			CATA_FULLPATH, 
+			PARENT_ID, 
+			STATUS, 
+			REMARKS, 
+			CREATE_BY, 
+			CREATE_DATE, 
+			UPDATE_BY, 
+			UPDATE_DATE, 
+			DEL_FLAG
+		) VALUES (
+			#{id}, 
+			#{cataItemId}, 
+			#{cataName}, 
+			#{cataCode}, 
+			#{parentIds}, 
+			#{parent.id}, 
+			#{status}, 
+			#{remarks}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_cata_detail SET 
+			ID = #{id}, 
+			CATA_ITEM_ID = #{cataItemId}, 
+			CATA_NAME = #{cataName}, 
+			CATA_CODE = #{cataCode}, 
+			CATA_FULLPATH = #{parentIds}, 
+			PARENT_ID = #{parent.id}, 
+			STATUS = #{status}, 
+			UPDATE_BY = #{updateBy.id}, 
+			UPDATE_DATE = #{updateDate}, 
+			REMARKS = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateParentIds">
+		UPDATE dc_cata_detail SET 
+			PARENT_ID = #{parent.id}, 
+			CATA_FULLPATH = #{parentIds}
+		WHERE ID = #{id}
+	</update>
+	
+	<!-- <update id="updateSort">
+		UPDATE dc_cata_detail SET 
+			sort = #{sort}
+		WHERE id = #{id}
+	</update> -->
+	
+	<update id="delete">
+		DELETE FROM dc_cata_detail 
+		WHERE ID = #{id} OR CATA_FULLPATH LIKE 
+					<if test="dbName == 'oracle'">'%,'||#{id}||',%'</if>
+					<if test="dbName == 'mysql'">CONCAT('%,', #{id}, ',%')</if>
+	</update>
+	
+	<update id="deleteByLogic">
+		UPDATE dc_cata_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE ID = #{id} OR CATA_FULLPATH LIKE 
+					<if test="dbName == 'oracle'">'%,'||#{id}||',%'</if>
+					<if test="dbName == 'mysql'">CONCAT('%,', #{id}, ',%')</if>
+	</update>
+	
+	
+	<select id="findList" resultType="dcSearchContent">
+		SELECT
+			<include refid="dcSearchContentColumns"/>
+		FROM dc_cata_detail a
+		WHERE del_flag = #{DEL_FLAG_NORMAL}
+		<if test="parent != null and parent.id != null and parent.id != ''">
+			and PARENT_ID = #{parent.id}
+		</if>
+		<if test="cataItemId !=null and cataItemId != ''">
+			and CATA_ITEM_ID =#{cataItemId}
+		</if>
+		<choose>
+			<!-- <when test="page !=null ">and page.orderBy != null and page.orderBy != ''
+				ORDER BY sort
+			</when> -->
+			<otherwise>
+				ORDER BY UPDATE_DATE DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

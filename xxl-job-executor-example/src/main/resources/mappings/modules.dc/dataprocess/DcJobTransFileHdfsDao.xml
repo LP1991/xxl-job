@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcJobTransFileHdfsDao">
+    
+	<sql id="dcJobTransFileHdfsColumns">
+		a.job_id AS "jobId",
+		a.ftp_ip AS "ip",
+		a.port AS "port",
+		a.account AS "account",
+		a.password AS "password",
+		a.pathname AS "pathname"
+	</sql>
+	
+	<sql id="dcJobTransFileHdfsJoins">
+		<!-- LEFT JOIN dc_job_transfile_hdfs c ON c.job_id = a.id -->
+	</sql>
+	
+    
+	<select id="get" resultType="DcJobTransFileHdfs" >
+		SELECT 
+			<include refid="dcJobTransFileHdfsColumns"/>
+		FROM dc_job_transfile_hdfs a
+		<include refid="dcJobTransFileHdfsJoins"/>
+		WHERE a.job_id = #{jobId}
+	</select>
+	
+	<select id="findList" resultType="DcJobTransFileHdfs" >
+		SELECT 
+			<include refid="dcJobTransFileHdfsColumns"/>
+		FROM dc_job_transfile_hdfs a
+		<include refid="dcJobTransFileHdfsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DcJobTransFileHdfs" >
+		SELECT 
+			<include refid="dcJobTransFileHdfsColumns"/>
+		FROM dc_job_transfile_hdfs a
+		<include refid="dcJobTransFileHdfsJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_job_transfile_hdfs(
+			job_id,
+			ftp_ip,
+			port,
+			account,
+			password,
+			pathname
+		) VALUES (
+			#{jobId},
+			#{ip},
+			#{port},
+			#{account},
+			#{password},
+			#{pathname}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_job_transfile_hdfs SET 	
+			ftp_ip = #{ip},
+			port = #{port},
+			account = #{account},
+			password = #{password},
+			pathname = #{pathname}
+		WHERE job_id = #{jobId}
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_job_transfile_hdfs
+		WHERE job_id = #{jobId}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE dc_job_transfile_hdfs SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE job_id = #{jobId}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="DcJobTransFileHdfs" statementType="STATEMENT">
+		select * FROM dc_job_transfile_hdfs  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

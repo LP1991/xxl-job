@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcJobTransIntfDao">
+    
+	<sql id="dcJobTransIntfColumns">		
+		a.ID AS id,
+		a.job_name as jobName,
+		a.job_desc as jobDesc,
+		a.job_Type as jobType,
+		a.tar_type as tarType,
+		a.log_dir as logDir,
+		a.STATUS as status,
+		a.REMARKS AS "remarks",
+		a.SORT_NUM as sortNum,
+		a.CREATE_BY AS "createBy.id",
+		a.CREATE_DATE as "createDate",
+		a.UPDATE_BY AS "updateBy.id",
+		a.UPDATE_DATE AS "updateDate"
+	</sql>
+	
+	<sql id="dcJobTransIntfJoins">
+	LEFT JOIN sys_user u ON u.id = a.create_by
+	LEFT JOIN sys_office o ON o.id = u.office_id
+    </sql>
+	
+	<sql id="dcJobTransIntfSql">
+		  a.id as 'id',
+		  a.job_name as 'jobName',
+		  a.job_desc as 'jobDesc', 
+		  a.job_Type as 'jobType',
+		  a.tar_type as 'tarType',
+		  a.log_dir as 'logDir',
+		  a.STATUS as 'status',
+		  a.REMARKS AS 'remarks',
+		  a.SORT_NUM as 'sortNum',
+		  a.CREATE_BY AS "createBy.id",
+		  a.CREATE_DATE as "createDate",
+		  a.UPDATE_BY AS "updateBy.id",
+		  a.UPDATE_DATE AS "updateDate",
+		  b.ws_path as wsPath,
+		  b.ws_namespace as wsNamespace,
+		  b.ws_method as wsMethod,
+		  b.rest_url as restUrl,
+		  b.rest_type as restType,
+		  b.rest_contentType AS restContentType,
+		  b.params as params,
+		  c.tarName as tarName,
+		  c.create_flag as createFlag,
+		  c.connId as connId,
+		  c.schemaName as schemaName
+    </sql>
+	<sql id="dcJobTransIntfSqlJoins">
+			LEFT JOIN DC_JOB_TransIntf_src b on a.id = b.jobId
+			LEFT JOIN DC_JOB_TransIntf_tar c on a.id = c.jobId
+			LEFT JOIN sys_user u ON u.id = a.create_by
+			LEFT JOIN sys_office o ON o.id = u.office_id
+    </sql>
+    
+	<select id="get" resultType="dcJobTransIntf">
+		SELECT
+			<include refid="dcJobTransIntfColumns"/>
+		FROM dc_job_TransIntf a
+		<include refid="dcJobTransIntfJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+	
+	<!-- 验证jobname不重复 -->
+	<select id="checkJobName" resultType="dcJobTransIntf">
+		SELECT
+			<include refid="dcJobTransIntfColumns"/>
+		FROM dc_job_TransIntf a
+		<include refid="dcJobTransIntfJoins"/>
+		WHERE a.job_name = #{jobName}
+		<if test="jobType != null and jobType != ''"> AND a.job_type = #{jobType} </if>
+		<if test="id != null and id != ''"> AND a.ID!=#{id}  </if>
+		  AND a.DEL_FLAG = 0
+	</select>
+    
+    <!-- 构建接口采集对象 -->
+	<select id="buildIntfForm" resultType="DcJobTransIntfForm">
+		SELECT
+		<include refid="dcJobTransIntfSql"/>
+		 FROM DC_JOB_TransIntf a
+		<include refid="dcJobTransIntfSqlJoins"/>
+		WHERE a.ID = #{id} OR b.jobId=#{id}
+	</select>
+	
+	<!-- 查询数据列表 -->
+	<select id="buildIntfList" resultType="DcJobTransIntfForm">
+		SELECT
+		<include refid="dcJobTransIntfSql"/>
+		  FROM DC_JOB_TransIntf a
+		<include refid="dcJobTransIntfSqlJoins"/>
+		 WHERE a.DEL_FLAG = #{DEL_FLAG_NORMAL} 
+		<choose>
+	        <when test="id !=null and id != ''">
+	            AND a.id=#{id}
+	        </when>
+	        <otherwise>
+				<if test="jobName != null and jobName != ''"> AND INSTR(a.job_name, #{jobName})>0  </if>
+				<if test="jobType != null and jobType != ''"> AND a.job_type = #{jobType} </if>
+				<if test="tarType != null and tarType != ''"> AND t.tar_type = #{tarType} </if>
+	        </otherwise>
+	    </choose>
+		<!-- 数据范围过滤 -->
+		${sqlMap.dsf}
+		ORDER BY a.UPDATE_DATE desc 
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_job_TransIntf(
+			ID, 
+			JOB_NAME, 
+			JOB_DESC, 
+			job_type,
+			tar_type,
+			LOG_DIR,
+			REMARKS, 
+			STATUS, 
+			CREATE_BY, 
+			CREATE_DATE, 
+			UPDATE_BY, 
+			UPDATE_DATE, 
+			SORT_NUM, 
+			DEL_FLAG
+		) VALUES (
+			#{id}, 
+			#{jobName}, 
+			#{jobDesc}, 
+			#{jobType},
+			#{tarType},
+			#{logDir},
+			#{remarks},
+			#{status}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{sortNum}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_job_TransIntf 
+		<set>
+			<if test="jobName != null"> JOB_NAME = #{jobName}, </if>
+			<if test="jobDesc != null"> JOB_DESC = #{jobDesc}, </if>
+			<if test="jobType != null"> job_type = #{jobType}, </if>
+			<if test="tarType != null"> tar_type = #{tarType}, </if>
+			<if test="logDir != null"> log_dir = #{logDir}, </if>
+			<if test="status != null"> STATUS = #{status}, </if>
+			<if test="remarks != null"> REMARKS = #{remarks}, </if>
+			<if test="sortNum != null and sortNum>0"> SORT_NUM = #{sortNum}, </if>
+			<if test="updateBy.id != null"> update_by = #{updateBy.id}, </if>
+			<if test="updateDate != null"> update_date = #{updateDate} </if>
+		</set>	
+		WHERE ID = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_job_TransIntf 
+		WHERE ID = #{id} 
+	</update>
+	
+	<update id="deleteByLogic">
+		UPDATE dc_job_TransIntf SET 
+			DEL_FLAG = #{DEL_FLAG_DELETE}
+		WHERE ID = #{id} 
+	</update>
+
+	
+</mapper>

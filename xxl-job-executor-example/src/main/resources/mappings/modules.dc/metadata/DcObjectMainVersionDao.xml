@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.metadata.dao.DcObjectMainVersionDao">
+
+    <sql id="dcObjectMainVersionColumns">
+        a.id AS "id",
+        a.OBJ_NAME AS "objName",
+        CASE a.OBJ_TYPE
+        WHEN '1' THEN '数据表'
+        WHEN '2' THEN '文件'
+        WHEN '3' THEN '字段'
+        WHEN '4' THEN '接口'
+        WHEN '5' THEN '文件夹'
+        WHEN '6' THEN '数据库'
+        ELSE '其他'
+        END AS "objType",
+        a.JOB_ID AS "jobId",
+        a.create_by AS "createBy.id",
+        a.create_date AS "createDate",
+        a.update_date AS "updateDate",
+        a.remark AS "remark",
+         CASE a.active
+        WHEN '1' THEN '增加'
+        WHEN '2' THEN '修改'
+        WHEN '3' THEN '调度'
+        WHEN '4' THEN '接口字段关联'
+        ELSE '其他'
+        END AS "active",
+        u.name AS "user.name"
+    </sql>
+
+    <sql id="dcObjectMainVersionJoins">
+        LEFT JOIN sys_user u ON u.id = a.create_by
+    </sql>
+    <!--判断数据是否存在-->
+    <select id="get" resultType="DcObjectMainVersion">
+        SELECT
+        <include refid="dcObjectMainVersionColumns" />
+        FROM dc_obj_version a
+        <include refid="dcObjectMainVersionJoins" />
+        WHERE 1=1
+        <if test="id != null and id != ''"> AND a.id = #{id} </if>
+
+    </select>
+
+    <select id="findList" resultType="DcObjectMainVersion">
+        SELECT
+        <include refid="dcObjectMainVersionColumns" />
+        FROM dc_obj_version a
+        <include refid="dcObjectMainVersionJoins" />
+        <where>
+            1=1
+            <if test="objName != null and objName != ''"> AND instr(a.OBJ_NAME, #{objName})>0 </if>
+            <if test="objType != null and objType != ''"> AND a.OBJ_TYPE in (${objType}) </if><!-- 进行对 objType多种条件的一个过滤-->
+            <if test="jobId != null and jobId != ''"> AND a.JOB_ID = #{jobId} </if>
+            <if test="jobId != null and jobId != ''"> AND a.JOB_type = #{jobType} </if>
+            <if test="createDate != null and createDate != ''"> AND a.CREATE_DATE > #{createDate} </if>
+        </where>
+        ${sqlMap.dsf}
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.CREATE_DATE DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findAllList" resultType="DcObjectMainVersion">
+        SELECT
+        <include refid="dcObjectMainVersionColumns" />
+        FROM dc_obj_version a
+        <include refid="dcObjectMainVersionJoins" />
+        <where>
+           1=1
+        </where>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.update_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+
+
+    <insert id="insert">
+        INSERT INTO dc_obj_version(
+        id,
+        OBJ_NAME,
+        OBJ_TYPE,
+        JOB_ID,
+        active,
+        create_by,
+        create_date,
+        update_date,
+        remark
+        ) VALUES (
+        #{id},
+        #{objName},
+        #{objType},
+        #{jobId},
+        #{active},
+        #{createBy.id},
+        #{createDate},
+        #{updateDate},
+        #{remark}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE dc_obj_version
+        <set>
+            <if test="objName != null"> OBJ_NAME = #{objName}, </if>
+            <if test="objType != null"> OBJ_TYPE = #{objType}, </if>
+            <if test="status != null"> STATUS = #{status}, </if>
+            <if test="jobId != null"> JOB_ID = #{jobId}, </if>
+            <if test="remark != null"> remark = #{remark}, </if>
+            <if test="active != null"> active = #{active}, </if>
+            <if test="updateDate != null"> update_date = #{updateDate} </if>
+
+        </set>
+        WHERE id = #{id}
+    </update>
+
+</mapper>

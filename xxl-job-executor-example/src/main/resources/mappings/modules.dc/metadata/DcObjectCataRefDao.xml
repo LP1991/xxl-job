@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.metadata.dao.DcObjectCataRefDao">
+
+
+	<sql id="dcDataSourceColumns">
+		a.OBJ_ID AS "objId",
+		a.CATA_ID AS "cataId"
+	</sql>
+
+	<insert id="insert">
+		INSERT INTO dc_obj_cata_ref(
+			OBJ_ID, 
+			CATA_ID
+		) VALUES (
+			#{objId}, 
+			#{cataId}
+		)
+	</insert>
+	
+	<!-- 初始化批量插入 -->
+	<insert id="batchInsert" parameterType="java.util.List">
+	INSERT INTO dc_obj_cata_ref(
+			OBJ_ID, 
+			CATA_ID
+		) VALUES
+		<foreach collection="list" item="item" index="index" separator="," >
+		(	#{item.objId,jdbcType=VARCHAR},
+			#{item.cataId,jdbcType=VARCHAR}
+		)
+		</foreach>
+	</insert>
+	
+<update id="delete">
+		DELETE FROM dc_obj_cata_ref
+		WHERE OBJ_ID = #{objId} 
+	</update>
+	
+	<update id="update">
+		UPDATE dc_obj_cata_ref SET 
+			OBJ_ID = #{objId}, 
+			CATA_ID = #{cataId}
+		WHERE OBJ_ID = #{objId} 
+		AND CATA_ID = #{oldCataId}
+	</update>
+	<select id="findList" resultType="DcObjectCataRef" >
+		SELECT
+		<include refid="dcDataSourceColumns"/>
+		FROM dc_obj_cata_ref a
+		<where>
+			<if test="cataId != null and cataId != ''"> AND a.CATA_ID = #{cataId} </if>
+			<if test="objId != null and objId != ''"> AND a.OBJ_ID = #{objId} </if>
+
+		</where>
+
+	</select>
+	<select id="quanglist" resultType="DcObjectCataRef">
+		SELECT
+		a.OBJ_ID AS "objId",
+		a.CATA_ID AS "cataId"
+		FROM dc_obj_cata_ref a
+		<where>
+			a.CATA_ID = #{cataId}
+		</where>
+	</select>
+	
+</mapper>

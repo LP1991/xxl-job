@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.metadata.dao.DcObjectAuDao">
+    
+	<sql id="dcObjectAuColumns">
+		a.id AS "id",
+		a.userId AS "userId",
+		a.fileId AS "fileId",
+		a.from_where AS "from",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		u.name AS "userName",
+		a.status AS "status"
+	</sql>
+	
+	<sql id="dcObjectAuJoins">
+	LEFT JOIN sys_user u ON u.id = a.userId
+	</sql>
+    
+	
+    <insert id="insert">
+		INSERT INTO applyau(
+			id,
+			userId,
+			fileId,
+			status,
+			from_where,
+			create_by,
+			create_date,
+			update_by,
+			update_date
+		) VALUES (
+			#{id},
+			#{userId},
+			#{fileId},
+			#{status},
+			#{from},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate}
+		)
+	</insert>
+    
+	<select id="get" resultType="DcObjectAu" >
+		SELECT 
+			<include refid="dcObjectAuColumns"/>
+		FROM applyau a
+		<include refid="dcObjectAuJoins"/>
+		WHERE a.userId = #{userId} 
+		AND a.fileId = #{fileId}
+	</select>
+	
+	<select id="getById" resultType="DcObjectAu" >
+		SELECT 
+			<include refid="dcObjectAuColumns"/>
+		FROM applyau a
+		<include refid="dcObjectAuJoins"/>
+		WHERE a.id = #{id} 
+	</select>
+	
+	<select id="findList" resultType="DcObjectAu" >
+		SELECT 
+			<include refid="dcObjectAuColumns"/>
+		FROM applyau a
+		<!--where a.create_by = #{currentUser}-->
+		<include refid="dcObjectAuJoins"/>
+		<where>
+			<if test="status != null and status != ''"> AND a.status = #{status} </if>
+		</where>
+		order by a.create_date desc
+	</select>
+
+	<select id="Main" resultType="DcObjectAu">
+    SELECT
+       a.ID AS mid,
+	  a.OBJ_NAME AS fileName
+    FROM
+	dc_obj_main a
+    WHERE
+	a.ID = #{mid}
+	</select>
+
+	<select id="transdata" resultType="DcObjectAu">
+		SELECT
+       a.ID AS tid,
+	  a.job_name as fileName
+    FROM
+	DC_JOB_TRANSDATA a
+    WHERE
+	a.ID = #{tid}
+	</select>
+	<select id="transintf" resultType="DcObjectAu">
+	  SELECT
+     a.ID AS sid,
+	a.job_name AS fileName
+    FROM
+	DC_JOB_TransIntf a
+    WHERE
+	a.ID = #{sid}
+	</select>
+	<select id="file" resultType="DcObjectAu">
+		SELECT
+		a.ID AS fid,
+       a.jobname AS fileName
+        FROM
+     dc_job_transfile a
+     WHERE
+     a.ID=#{fid};
+	</select>
+	<select id="hdfs" resultType="DcObjectAu">
+		SELECT
+		a.ID AS hid,
+		job_name as fileName
+		FROM
+		dc_job_transHdfs a
+		WHERE
+		a.ID=#{hid};
+	</select>
+
+
+	<select id="export" resultType="DcObjectAu">
+		SELECT
+		a.ID AS eid,
+		job_name as fileName
+		FROM
+		dc_job_exportdata a
+		WHERE
+		a.ID=#{eid};
+	</select>
+
+	<!-- 查询我的数据 列表 -->
+	<select id="queryMyDataList" resultType="DcObjectMain" >
+		SELECT 
+		 distinct
+		     a.ID AS "id",
+			a.OBJ_CODE AS "objCode",
+			a.OBJ_NAME AS "objName",
+		CASE a.OBJ_TYPE
+		WHEN '1' THEN '数据表'
+		WHEN '2' THEN '文件'
+		WHEN '3' THEN '字段'
+		WHEN '4' THEN '接口'
+		WHEN '5' THEN '文件夹'
+		WHEN '6' THEN '数据库'
+		ELSE '其他'
+		END AS "objType",
+			a.SYSTEM_ID AS "systemId",
+			a.OBJ_DESC AS "objDesc",
+			a.MANAGER_PER AS "managerPer",
+			a.MANAGER_ORG AS "managerOrg",
+			a.JOB_ID AS "jobId",
+			a.JOB_TYPE AS "jobType",
+			a.JOB_SRC_FLAG AS "jobSrcFlag",
+			a.sort_Num AS "sortNum",
+			a.status AS "status",
+			 c.userId ,
+			a.create_by AS "createBy.id",
+			c.update_date AS "createDate",
+			a.update_by AS "updateBy.id",
+			a.update_date AS "updateDate",
+			a.remarks AS "remarks",
+			a.del_flag AS "delFlag"
+		  FROM dc_obj_main a 
+		 RIGHT JOIN sys_objm s on s.obj_main_id=a.ID 
+		 LEFT JOIN applyau c on c.fileId = a.id
+		 LEFT JOIN dc_obj_cata_ref r on a.ID=r.OBJ_ID
+		LEFT JOIN dc_cata_detail d on d.ID = r.CATA_ID
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} AND a.ID is not null
+			<if test="createBy.id != null and createBy.id != '' and createBy.id != '1'.toString()"> AND (s.role_id=#{createBy.id} or a.CREATE_BY=#{createBy.id}) </if>
+			<if test="objName != null and objName != ''"> AND instr(a.OBJ_NAME, #{objName})>0 </if>
+			<if test="objCode != null and objCode != ''"> AND instr(a.OBJ_CODE, #{objCode})>0 </if>
+			<if test="objType != null and objType != ''"> AND a.OBJ_TYPE = #{objType} </if>
+			<if test="jobId != null and jobId != ''"> AND a.JOB_ID = #{jobId} </if>
+			<if test="jobType != null and jobType != ''"> AND a.JOB_TYPE = #{jobType} </if>
+			<if test="jobSrcFlag != null and jobSrcFlag != ''"> AND a.JOB_SRC_FLAG = #{jobSrcFlag} </if>
+			<if test="cataid != null and cataid != ''"> AND r.CATA_ID = #{cataid}</if>
+			<if test="objCataItem != null and objCataItem != ''"> AND d.CATA_ITEM_ID = #{objCataItem} </if>
+			<if test="objCataItem != null and objCataItem != ''"> AND C.USERID = #{createBy.id} </if>
+		</where>
+		order by a.update_date desc
+	</select>
+ <!-- 查询我的收藏列表 -->
+    <select id="colleCtDataList" resultType="DcObjectMain" >
+		SELECT 
+			a.ID AS "id",
+			a.OBJ_CODE AS "objCode",
+			a.OBJ_NAME AS "objName",
+		CASE a.OBJ_TYPE
+		WHEN '1' THEN '数据表'
+		WHEN '2' THEN '文件'
+		WHEN '3' THEN '字段'
+		WHEN '4' THEN '接口'
+		WHEN '5' THEN '文件夹'
+		WHEN '6' THEN '数据库'
+		ELSE '其他'
+		END AS "objType",
+			a.SYSTEM_ID AS "systemId",
+			a.OBJ_DESC AS "objDesc",
+			a.MANAGER_PER AS "managerPer",
+			a.MANAGER_ORG AS "managerOrg",
+			a.JOB_ID AS "jobId",
+			a.JOB_SRC_FLAG AS "jobSrcFlag",
+			a.sort_Num AS "sortNum",
+			a.status AS "status",
+		a.create_by AS "createBy.id",
+		   c.COLLECT_TIME AS "createDate",
+			a.remarks AS "remarks",
+			a.del_flag AS "delFlag"
+		  FROM dc_obj_main a 
+	
+		 LEFT JOIN DC_OBJ_COLLECT c on c.OBJ_ID = a.id
+		 LEFT JOIN dc_obj_cata_ref r on a.ID=r.OBJ_ID and r.OBJ_ID=c.OBJ_ID
+		LEFT JOIN dc_cata_detail d on d.ID = r.CATA_ID
+	
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} AND a.ID is not null
+			<if test="createBy.id != null and createBy.id != '' and createBy.id != '1'.toString()"></if>
+			<if test="objName != null and objName != ''"> AND instr(a.OBJ_NAME, #{objName})>0 </if>
+			<if test="objCode != null and objCode != ''"> AND instr(a.OBJ_CODE, #{objCode})>0 </if>
+			<if test="objType != null and objType != ''"> AND a.OBJ_TYPE = #{objType} </if>
+			<if test="jobId != null and jobId != ''"> AND a.JOB_ID = #{jobId} </if>
+			<if test="jobType != null and jobType != ''"> AND a.JOB_TYPE = #{jobType} </if>
+			<if test="jobSrcFlag != null and jobSrcFlag != ''"> AND a.JOB_SRC_FLAG = #{jobSrcFlag} </if>
+			<if test="cataid != null and cataid != ''"> AND r.CATA_ID = #{cataid}</if>
+			<if test="objCataItem != null and objCataItem != ''"> AND d.CATA_ITEM_ID = #{objCataItem} </if>
+		  <if test="objCataItem != null and objCataItem != ''"> AND C.USER_ID = #{createBy.id} </if>
+
+		</where>
+		order by a.update_date desc
+	</select>
+	
+	<select id="findAllList" resultType="DcObjectAu" >
+		SELECT 
+			<include refid="dcObjectAuColumns"/>
+		FROM applyau a
+		<include refid="dcObjectAuJoins"/>
+	</select>
+	
+
+	
+	<insert id="pass">
+		INSERT INTO sys_objm(
+			role_id,
+			obj_main_id
+		) VALUES (
+			#{userId},
+			#{fileId}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE applyau 
+		SET
+		status = #{status} 
+		WHERE id = #{id} 
+	</update>
+	
+	<update id="delete">
+		DELETE FROM sys_objm 
+		WHERE role_id = #{userId} 
+		AND obj_main_id = #{fileId}
+	</update>
+	
+	
+	<!-- 根据用户id或者元数据对象获取权限列表 -->
+	<select id="getAccreList" resultType="DcSysObjm" >
+	SELECT role_id as userId, obj_main_id as objMainId
+	  FROM sys_objm
+	 WHERE 1=1 
+	 <if test="userId != null and userId != ''"> AND ROLE_ID = #{userId} </if>
+	 <if test="fileId != null and fileId != ''"> AND OBJ_MAIN_ID = #{fileId} </if>
+	</select>
+
+	
+</mapper>

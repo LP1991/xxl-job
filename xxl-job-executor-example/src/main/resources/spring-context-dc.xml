@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context-4.0.xsd" >
+		
+	<description>数据中心依赖bean配置</description>
+	
+    <!-- 数据统一处理Service -->
+  	<bean id ="dbHandleService" class="com.hlframe.modules.dc.metadata.service.linkdb.DbHandleService">
+  		<property name="dcDataSourceService" ref="dcDataSourceService" />
+  		<!-- 数据库回写服务类 不同数据库 进行不同配置  -->
+  		<property name="handleServiceMap">
+  			<map>
+  				<entry key="dc_oracle" value-ref="dcOracleHandle" />
+  				<entry key="dc_mysql" value-ref="dcMysqlHandle" />
+  				<entry key="dc_sqlserver" value-ref="dcMsSqlServerHandle" />
+  				<entry key="dc_db2" value-ref="dcDB2Handle" />
+  				<!--<entry key="dc_postgresql" value-ref="dcPostgresqlHandle" />-->
+  				<!--<entry key="dc_impala" value-ref="dcImpalaHandle" />-->
+  			</map>
+  		</property>
+  	</bean>
+        
+</beans>

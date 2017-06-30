@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.schedule.dao.DcTaskQueueRefDao">
+    
+	<sql id="dcTaskQueueRefColumns">		
+		a.id AS id,
+		a.queue_id AS "queueId",
+		a.task_Id AS "task.id",
+		m.task_name as "task.taskName",
+		m.task_desc as "task.taskDesc",
+		m.tasktype as "task.taskType",
+		m.status as "task.status",
+		a.pre_task_id AS "preTask.id",
+		pr.remarks as "preTask.remarks",
+		p.task_name as "preTask.taskName",
+		p.task_desc as "preTask.taskDesc",
+		p.tasktype as "preTask.taskType",
+		p.status as "preTask.status",
+		s.queue_name AS "queueName",
+		a.pre_task_status AS "preTaskStatus",
+		a.task_result AS "taskResult",
+		a.task_status AS "taskStatus",
+		a.sort_num AS "sortNum",
+		a.create_by AS "createBy.id",
+		u.`name` as "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="dcTaskQueueRefJoins">
+		LEFT JOIN sys_user u ON u.id = a.create_by
+		LEFT JOIN sys_office o ON o.id = u.office_id
+		LEFT JOIN dc_task_main m ON m.id = a.task_Id and m.del_flag='0'
+		LEFT JOIN dc_task_queue_ref pr on a.pre_task_id = pr.id and pr.del_flag='0'
+		LEFT JOIN dc_task_main p ON p.id =  pr.task_Id AND p.del_flag = '0'
+		LEFT JOIN  dc_task_queue s ON s.id=a.queue_id
+	</sql>
+	
+	<select id="get" resultType="DcTaskQueueRef">
+		SELECT
+			<include refid="dcTaskQueueRefColumns"/>
+		FROM dc_task_queue_ref a
+		<include refid="dcTaskQueueRefJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+	
+	<!-- 验证任务是否重复添加 -->
+	<select id="getTaskInfo" resultType="DcTaskQueueRef">
+		SELECT 
+			<include refid="dcTaskQueueRefColumns"/> 
+		  FROM dc_task_queue_ref 
+		 WHERE del_flag = #{DEL_FLAG_NORMAL} 
+		   <if test="id != null and id!=''"> and id != #{id} </if>
+		   <if test="taskId != null and taskId!=''"> and a.task_Id = #{taskId} </if>
+		   <if test="queueId != null and queueId!=''"> and a.queue_id = #{queueId} </if>
+	</select>
+    
+    <!-- 查询队列任务 根据依赖关系和序号显示  -->
+	<select id="findList" resultType="DcTaskQueueRef">
+		SELECT
+			<include refid="dcTaskQueueRefColumns"/>
+		FROM dc_task_queue_ref a
+		<include refid="dcTaskQueueRefJoins"/>
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+		<if test="queueId != null and queueId!=''"> and a.queue_id = #{queueId} </if>
+		<if test="taskId != null and taskId!=''"> and a.task_Id = #{taskId} </if>
+		<if test="id != null and id!=''"> and a.id != #{id} </if>
+		${sqlMap.dsf}
+		ORDER BY /*a.pre_task_id,*/ a.sort_num
+	</select>
+	
+	<!-- 查询队列任务 列表 主要用于重复判断 -->
+	<select id="findQueueTaskList" resultType="DcTaskQueueRef">
+		SELECT
+			a.id AS id,
+			a.queue_id AS "queueId",
+			a.task_Id AS "task.id",
+			a.pre_task_id AS "preTask.id",
+			a.pre_task_status AS "preTaskStatus",
+			a.task_result AS "taskResult",
+			a.task_status AS "taskStatus"
+		 FROM dc_task_queue_ref a
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+		<if test="taskId != null and taskId!=''"> and a.task_Id = #{taskId} </if>
+		<if test="queueId != null and queueId!=''"> and a.queue_id != #{queueId} </if>
+		ORDER BY a.update_date	
+	</select>
+	
+	
+	<insert id="insert">
+		INSERT INTO dc_task_queue_ref(
+			id, 
+			queue_id,
+			task_Id, 
+			pre_task_id,
+			pre_task_status, 
+			task_result,
+			task_status, 
+			sort_num, 
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id}, 
+			#{queueId}, 
+			#{taskId}, 
+			#{preTaskId}, 
+			#{preTaskStatus}, 
+			#{taskResult}, 
+			#{taskStatus}, 
+			#{sortNum}, 
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_task_queue_ref 
+		<set>
+			<if test="queueId != null"> queue_id = #{queueId}, </if>  
+			<if test="taskId != null"> task_Id = #{taskId}, </if>  
+			<if test="preTaskId != null"> pre_task_id = #{preTaskId}, </if>  
+			<if test="preTaskStatus != null"> pre_task_status = #{preTaskStatus}, </if>  
+			<if test="taskResult != null"> task_result = #{taskResult}, </if>  
+			<if test="taskStatus != null"> task_status = #{taskStatus}, </if>  
+			<if test="sortNum != null"> sort_num = #{sortNum}, </if>  
+			<if test="delFlag != null"> del_flag = #{delFlag}, </if>  
+			<if test="remarks != null"> remarks = #{remarks}, </if>  
+			<if test="updateBy.id != null">update_by = #{updateBy.id}, </if>  
+			<if test="updateDate != null"> update_date = #{updateDate} </if>  
+		</set> 	
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_task_queue_ref WHERE ID = #{id} 
+	</update>
+	
+</mapper>

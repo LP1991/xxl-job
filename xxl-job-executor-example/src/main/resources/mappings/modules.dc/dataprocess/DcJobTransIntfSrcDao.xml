@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcJobTransIntfSrcDao">
+    
+	<sql id="dcJobTransIntfSrcColumns">
+		a.ID AS id,
+		a.jobId as jobId,
+		a.ws_path as wsPath,
+		a.ws_namespace as wsNamespace,
+		a.ws_method as wsMethod,
+		a.rest_url as restUrl,
+		a.rest_type as restType,
+		a.rest_contentType AS restContentType,
+		a.params as params
+	</sql>
+	
+	<sql id="dcJobTransIntfSrcJoins">
+    </sql>
+    
+	<select id="get" resultType="dcJobTransIntfSrc">
+		SELECT
+			<include refid="dcJobTransIntfSrcColumns"/>
+		FROM dc_job_transIntf_src a
+		<include refid="dcJobTransIntfSrcJoins"/>
+		WHERE a.jobId = #{jobid}
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_job_transIntf_src(
+			ID, 
+			jobId, 
+			ws_path,
+			ws_namespace,
+			ws_method,
+			rest_url,
+			rest_type,
+			rest_contentType,
+			params
+		) VALUES (
+			#{id}, 
+			#{jobId},
+			#{wsPath},
+			#{wsNamespace},
+			#{wsMethod},
+			#{restUrl},
+			#{restType},
+			#{restContentType},
+			#{params}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_job_transIntf_src 
+		<set>
+			<if test="wsPath != null"> ws_path = #{wsPath}, </if>
+			<if test="wsNamespace != null"> ws_namespace = #{wsNamespace}, </if>
+			<if test="wsMethod != null"> ws_method = #{wsMethod}, </if>
+			<if test="restUrl != null"> rest_url = #{restUrl}, </if>
+			<if test="restType != null"> rest_type = #{restType}, </if>
+			<if test="restContentType != null"> rest_contentType = #{restContentType}, </if>
+			<if test="params != null"> params = #{params}, </if>
+		</set>
+		 WHERE jobId = #{jobId}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_job_transIntf_src 
+		WHERE jobId = #{jobId} 
+	</update>
+	
+</mapper>

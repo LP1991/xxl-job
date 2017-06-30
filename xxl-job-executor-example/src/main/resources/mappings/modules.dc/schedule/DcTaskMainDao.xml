@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.schedule.dao.DcTaskMainDao">
+    
+	<sql id="dcTaskMainColumns">		
+		a.ID AS id,
+		a.TASK_NAME AS "taskName",
+		a.METHOD_NAME AS "methodName",
+		a.TASK_DESC AS "taskDesc",
+		a.PRIORITY AS "priority",
+		a.STATUS AS "status",
+		a.PARAMETER AS "parameter",
+		a.CLASSNAME AS "className",
+		a.FILENAME AS "fileName",
+		a.FILEPATH AS "filePath",
+		a.TASKTYPE AS "taskType",
+		a.TASKPATH AS "taskPath",
+		a.CREATE_BY AS "createBy.id",
+		a.CREATE_DATE AS "create_date",
+		a.UPDATE_BY AS "updateBy.id",
+		a.UPDATE_DATE AS "update_date"
+	</sql>
+	
+	<sql id="dcTaskMainJoins">
+	LEFT JOIN sys_user u ON u.id = a.create_by
+	LEFT JOIN sys_office o ON o.id = u.office_id
+	</sql>
+	
+	<select id="get" resultType="DcTaskMain">
+		SELECT
+			<include refid="dcTaskMainColumns"/>
+		FROM dc_task_main a
+		<include refid="dcTaskMainJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+    
+	<select id="findList" resultType="DcTaskMain">
+		SELECT
+			<include refid="dcTaskMainColumns"/>
+		FROM dc_task_main a
+		<include refid="dcTaskMainJoins"/>
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+		<choose>
+	        <when test="id !=null and id != ''">
+	            AND a.id=#{id}
+	        </when>
+	        <otherwise>
+				<if test="taskName != null and taskName != ''"> AND a.TASK_NAME like CONCAT('%', #{taskName}, '%') </if>
+				<if test="taskType != null and taskType != ''"> AND a.taskType like CONCAT('%', #{taskType}, '%') </if>
+	        </otherwise>
+	    </choose>
+		${sqlMap.dsf}
+		ORDER BY a.UPDATE_DATE desc
+	</select>
+
+	<insert id="insert">
+		INSERT INTO dc_task_main(
+			ID, 
+			TASK_NAME,
+			METHOD_NAME, 
+			TASK_DESC, 
+			PRIORITY,
+			STATUS, 
+			PARAMETER,
+			CLASSNAME,
+			TASKTYPE,
+			TASKPATH,
+			FILENAME,
+			FILEPATH,
+			CREATE_BY, 
+			CREATE_DATE, 
+			UPDATE_BY, 
+			UPDATE_DATE
+		) VALUES (
+			#{id}, 
+			#{taskName}, 
+			#{methodName}, 
+			#{taskDesc}, 
+			#{priority},  
+			#{status},  
+			#{parameter}, 
+			#{className}, 
+			#{taskType}, 
+			#{taskPath}, 
+			#{fileName}, 
+			#{filePath}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}
+		)
+	</insert>
+	
+		<select id="getTaskName" resultType="DcTaskMain">
+		SELECT
+			a.TASK_NAME AS "taskName" 
+		FROM dc_task_main a 
+		WHERE a.TASK_NAME = #{taskName}
+	</select>
+	
+		<update id="update">
+		UPDATE dc_task_main SET 
+			TASK_NAME = #{taskName}, 
+			METHOD_NAME = #{methodName}, 
+			TASK_DESC = #{taskDesc}, 
+			PRIORITY = #{priority}, 
+			STATUS = #{status}, 
+			PARAMETER= #{parameter},
+			CLASSNAME= #{className},
+			TASKTYPE= #{taskType},
+			TASKPATH= #{taskPath},
+			FILENAME= #{fileName},
+			FILEPATH= #{filePath},
+			UPDATE_BY = #{updateBy.id}, 
+			UPDATE_DATE = #{updateDate} 
+		WHERE ID = #{id}
+	</update>
+	
+<!-- 	<update id="delete"> -->
+<!-- 		DELETE FROM dc_task_main -->
+<!-- 		WHERE ID = #{id}  -->
+<!-- 	</update> -->
+	
+	<!--逻辑删除-->
+	<update id="delete">
+	DELETE FROM dc_task_main
+	WHERE ID = #{id}  
+	</update>
+	<!-- 统计 -->
+	<select id="getTaskCataAndResource" resultType="map">
+		SELECT count(1) as num,a.TASKPATH,a.TASKTYPE
+        FROM dc_task_main a
+        <include refid="dcTaskMainJoins"/>
+        GROUP BY a.TASKPATH,a.TASKTYPE
+	</select>
+	<select id="countTaskStatus" resultType="map">
+        SELECT count(1) as num,t.TRIGGER_TYPE,t.STATUS
+        FROM dc_task_main a
+        INNER JOIN dc_task_time t on(a.ID = t.taskfromid)
+        <include refid="dcTaskMainJoins"/>
+        GROUP BY t.TRIGGER_TYPE,t.STATUS
+	</select>
+
+</mapper>

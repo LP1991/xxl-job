@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.metadata.dao.DcObjectMainDao">
+
+	<sql id="dcObjectMainColumns">
+		a.id AS "id",
+		a.OBJ_CODE AS "objCode",
+		a.OBJ_NAME AS "objName",
+		CASE a.OBJ_TYPE
+			WHEN '1' THEN '数据表'
+			WHEN '2' THEN '文件'
+			WHEN '3' THEN '字段'
+			WHEN '4' THEN '接口'
+			WHEN '5' THEN '文件夹'
+			WHEN '6' THEN '数据库'
+			ELSE '其他'
+		END AS "objType",
+		a.SYSTEM_ID AS "systemId",
+		a.OBJ_DESC AS "objDesc",
+		a.MANAGER_PER AS "managerPer",
+		a.MANAGER_ORG AS "managerOrg",
+		a.JOB_ID AS "jobId",
+		a.JOB_TYPE AS "jobType",
+		a.JOB_SRC_FLAG AS "jobSrcFlag",
+		a.sort_Num AS "sortNum",
+		a. STATUS AS "status",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		u2.id AS "user.id",
+		u2. NAME AS "user.name",
+		o2.id AS "office.id",
+		o2. NAME AS "office.name",
+	    t.TABLE_NAME AS "tablename",
+		IFNULL(s.conn_name,'hive') as "tablelink",
+		REPLACE(IFNULL(s.SERVER_TYPE,'hive'),'dc_','')  AS "dbtype",
+		t.DB_DATABASE AS "dbdatabase",
+		IFNULL(s.CONN_NAME,'hive')  AS "connname",
+	    case a.OBJ_TYPE when '2' then f.FILE_NAME else g.FOLDER_NAME end AS "fileName",
+	    case  a.OBJ_TYPE when '2'then f.FILE_URL else g.FOLDER_URL  END AS "fileUrl"
+	</sql>
+
+	<sql id="dcObjectMainJoins">
+		LEFT JOIN sys_user u2 ON u2.id = a.MANAGER_PER
+		LEFT JOIN sys_office o2 ON o2.id = a.MANAGER_ORG
+		LEFT JOIN sys_user u ON u.id = a.create_by
+		LEFT JOIN sys_office o ON o.id = u.office_id
+		LEFT JOIN dc_obj_table t ON t.OBJ_ID= a.ID
+		LEFT JOIN dc_data_source s ON s.ID=t.TABLE_LINK
+		LEFT JOIN dc_obj_file f ON f.OBJ_ID= a.ID
+		LEFT JOIN dc_obj_folder g ON g.OBJ_ID= a.ID
+	</sql>
+	<sql id="obj4esColumns">
+		group_concat(CONCAT(cata.CATA_FULLPATH,cata.ID) separator ';') as catalogsPath,
+		obj.ID as id,
+		obj.OBJ_CODE AS objCode,
+		obj.OBJ_NAME AS objName,
+		obj.OBJ_TYPE as objType,
+		obj.OBJ_DESC AS objDesc,
+		obj.MANAGER_PER AS managerPer,
+		obj.MANAGER_ORG AS managerOrg,
+		obj.REMARKS AS remarks,
+		obj.SORT_NUM AS sortNum,
+		obj.CREATE_BY AS createBy,
+		obj.CREATE_DATE AS createDate,
+		obj.UPDATE_BY AS updateBy,
+		obj.UPDATE_DATE AS updateDate
+	</sql>
+	<sql id="objJoinsWithCataDetail">
+		INNER JOIN dc_obj_cata_ref ref on ref.OBJ_ID = obj.ID INNER
+		JOIN dc_cata_detail cata on cata.ID = ref.CATA_ID
+	</sql>
+	<!--判断数据是否存在-->
+	<select id="get" resultType="DcObjectMain">
+		SELECT
+		<include refid="dcObjectMainColumns" />
+		FROM dc_obj_main a
+		<include refid="dcObjectMainJoins" />
+		WHERE 1=1  AND a.del_flag = #{DEL_FLAG_NORMAL}
+		<if test="id != null and id != ''"> AND a.id = #{id} </if>
+		<if test="jobId != null and jobId != ''"> AND a.job_Id = #{jobId} </if>
+		<if test="jobSrcFlag != null and jobSrcFlag != ''"> AND a.JOB_SRC_FLAG = #{jobSrcFlag} </if>
+
+	</select>
+	<select id="getById" resultType="DcObjectMain">
+		SELECT
+		<include refid="dcObjectMainColumns" />
+		FROM dc_obj_main a
+		<include refid="dcObjectMainJoins" />
+		WHERE  a.id = #{id} AND a.del_flag = '0'
+	</select>
+
+	<select id="findList" resultType="DcObjectMain">
+		SELECT
+		<include refid="dcObjectMainColumns" />
+		FROM dc_obj_main a
+		<include refid="dcObjectMainJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="objName != null and objName != ''"> AND instr(a.OBJ_NAME, #{objName})>0 </if>
+			<if test="objCode != null and objCode != ''"> AND instr(a.OBJ_CODE, #{objCode})>0 </if>
+			<if test="objType != null and objType != ''"> AND a.OBJ_TYPE in (${objType}) </if><!-- 进行对 objType多种条件的一个过滤-->
+			<if test="jobId != null and jobId != ''"> AND a.JOB_ID = #{jobId} </if>
+			<if test="jobType != null and jobType != ''"> AND a.JOB_TYPE = #{jobType} </if>
+			<if test="jobSrcFlag != null and jobSrcFlag != ''"> AND a.JOB_SRC_FLAG = #{jobSrcFlag} </if>
+			<if test="createDate != null and createDate != ''"> AND a.CREATE_DATE > #{createDate} </if>
+		</where>
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<!-- 根据编目分类 查询数据对象 peijd -->
+	<select id="findListByCata" resultType="DcObjectMain">
+		SELECT
+		<include refid="dcObjectMainColumns" />
+		FROM dc_obj_main a
+		LEFT JOIN dc_obj_cata_ref b on a.ID=b.OBJ_ID
+		LEFT
+		JOIN dc_cata_detail c on c.ID = b.CATA_ID
+		<include refid="dcObjectMainJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="objCata != null and objCata != ''"> AND b.CATA_ID = #{objCata} AND a.OBJ_TYPE!='6'</if>
+			<if test="objName != null and objName != ''"> AND instr(a.OBJ_NAME, #{objName})>0 </if>
+			<if test="objType != null and objType != ''"> AND a.OBJ_TYPE = #{objType}</if>
+			<if test="objCataItem != null and objCataItem != ''"> AND c.CATA_ITEM_ID = #{objCataItem} </if>
+			<if test="jobId != null and jobId != ''"> AND a.JOB_ID = #{jobId} </if>
+			<if test="jobType != null and jobType != ''"> AND a.JOB_TYPE = #{jobType} </if>
+			<if test="jobSrcFlag != null and jobSrcFlag != ''"> AND a.JOB_SRC_FLAG = #{jobSrcFlag} </if>
+		</where>
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findAllList" resultType="DcObjectMain">
+		SELECT
+		<include refid="dcObjectMainColumns" />
+		FROM dc_obj_main a
+		<include refid="dcObjectMainJoins" />
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 查询我的申请 -->
+	<select id="quanglist" resultType="DcObjectMain">
+		SELECT
+		a.id AS "id",
+		a.OBJ_CODE AS "objCode",
+		a.OBJ_NAME AS "objName",
+		c.create_date AS "collectTime",
+		c.STATUS AS "status",
+		u.NAME AS "name"
+		FROM dc_obj_main a
+
+		LEFT JOIN
+		applyau c ON c.fileId = a.ID
+		LEFT JOIN sys_user u ON u.id=c.userId
+
+		<where>
+			a.id = #{id} AND c.STATUS='已通过'
+		</where>
+	</select>
+	<!-- 查看我的收藏 -->
+
+	<select id="shochanlist" resultType="DcObjectMain">
+		SELECT
+		a.id AS "id",
+		a.OBJ_CODE AS "objCode",
+		a.OBJ_NAME AS "objName",
+		c.COLLECT_TIME AS "collectTime",
+		u.NAME AS "name"
+		FROM dc_obj_main a
+		LEFT JOIN DC_OBJ_COLLECT c ON c.OBJ_ID= a.ID
+		LEFT JOIN sys_user u ON
+		u.id = c.USER_ID
+
+		<where>
+			a.id = #{id} and c.OBJ_ID is not NULL
+		</where>
+	</select>
+	<!-- 查看数据表信息与对象id做关联 -->
+	<select id="tnadmin" resultType="DcObjectMain">
+		SELECT
+		a.id AS "id",
+		t.TABLE_NAME AS "tablename",
+	   IFNULL(s.conn_name,'hive') as "tablelink",
+        REPLACE(IFNULL(s.SERVER_TYPE,'hive'),'dc_','')  AS "dbtype",
+		t.DATA_NUM AS "datanum",
+		t.DB_TYPE AS "dbtype",
+		t.DB_DATABASE AS "dbdatabase",
+		t.STORE_TYPE AS "storeType",
+		t.REMARKS AS "remarks"
+		
+		FROM
+		dc_obj_table t
+		LEFT JOIN dc_obj_main a ON a.ID = t.OBJ_ID
+		LEFT JOIN dc_data_source s ON s.ID=t.TABLE_LINK
+
+		<where>
+			a.id = #{id}
+		</where>
+		</select>
+	<update id="updatelist">
+		UPDATE dc_obj_table
+		<set>
+			<if test="tablename != null"> TABLE_NAME = #{tablename}, </if>
+			<if test="tablelink != null"> TABLE_LINK = #{tablelink}, </if>
+			<if test="datanum != null"> DATA_NUM = #{datanum}, </if>
+			<if test="dbtype != null"> DB_TYPE = #{dbtype}, </if>
+			<if test="dbdatabase != null"> DB_DATABASE = #{dbdatabase}, </if>
+
+		</set>
+		WHERE id = #{id}
+	</update>
+
+
+	<insert id="insert">
+		INSERT INTO dc_obj_main(
+		id,
+		OBJ_NAME,
+		OBJ_CODE,
+		OBJ_TYPE,
+		SYSTEM_ID,
+		OBJ_DESC,
+		MANAGER_PER,
+		MANAGER_ORG,
+		STATUS,
+		JOB_ID,
+		JOB_TYPE,
+		JOB_SRC_FLAG,
+		SORT_NUM,
+		create_by,
+		create_date,
+		update_by,
+		update_date,
+		remarks,
+		del_flag
+		) VALUES (
+		#{id},
+		#{objName},
+		#{objCode},
+		#{objType},
+		#{systemId},
+		#{objDesc},
+		#{managerPer},
+		#{managerOrg},
+		#{status},
+		#{jobId},
+		#{jobType},
+		#{jobSrcFlag},
+		#{sortNum},
+		#{createBy.id},
+		#{createDate},
+		#{updateBy.id},
+		#{updateDate},
+		#{remarks},
+		#{delFlag}
+		)
+	</insert>
+
+	<update id="update">
+		UPDATE dc_obj_main
+		<set>
+			<if test="objName != null"> OBJ_NAME = #{objName}, </if>
+			<if test="objCode != null"> OBJ_CODE = #{objCode}, </if>
+			<if test="objType != null"> OBJ_TYPE = #{objType}, </if>
+			<if test="systemId != null"> SYSTEM_ID = #{systemId}, </if>
+			<if test="objDesc != null"> OBJ_DESC = #{objDesc}, </if>
+			<if test="managerPer != null"> MANAGER_PER = #{managerPer}, </if>
+			<if test="managerOrg != null"> MANAGER_ORG = #{managerOrg}, </if>
+			<if test="status != null"> STATUS = #{status}, </if>
+			<if test="jobId != null"> JOB_ID = #{jobId}, </if>
+			<if test="jobType != null"> JOB_TYPE = #{jobType}, </if>
+			<if test="jobSrcFlag != null"> JOB_SRC_FLAG = #{jobSrcFlag}, </if>
+			<if test="sortNum != null"> SORT_NUM = #{sortNum}, </if>
+			<if test="remarks != null"> remarks = #{remarks}, </if>
+			<if test="updateBy.id != null"> update_by = #{updateBy.id}, </if>
+			<if test="updateDate != null"> update_date = #{updateDate} </if>
+
+		</set>
+		WHERE id = #{id}
+	</update>
+
+
+
+	<!--物理删除 -->
+	<update id="delete">
+		DELETE FROM dc_obj_main
+		WHERE id = #{id}
+	</update>
+
+	<!--逻辑删除 -->
+	<update id="deleteByLogic">
+		UPDATE dc_obj_main SET
+		del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="DcObjectMain"
+		statementType="STATEMENT">
+		select
+		<include refid="dcObjectMainColumns" />
+		FROM dc_obj_main a
+		<include refid="dcObjectMainJoins" />
+		where a.del_flag = '0' and ${propertyName} = '${value}'
+	</select>
+
+	<!-- 根据名字删除路径记录 -->
+	<update id="deleteName">
+		DELETE FROM dc_obj_main
+		WHERE OBJ_NAME = #{objName}
+	</update>
+
+	<!-- es -->
+	<select id="getCataInfo2EsById" resultType="java.util.HashMap">
+		SELECT
+		<include refid="obj4esColumns" />
+		FROM dc_obj_main obj
+		<include refid="objJoinsWithCataDetail" />
+
+		<where>
+			obj.DEL_FLAG = '0' 
+			<if test="objId != null and objId != ''"> AND obj.ID = #{objId}</if>
+		</where>
+		GROUP BY obj.ID
+	</select>
+
+	<!-- 批量插入链路关系 -->
+	<insert id="batchInsert" parameterType="java.util.List">
+		INSERT INTO dc_obj_main (
+		id,
+		OBJ_NAME,
+		OBJ_CODE,
+		OBJ_TYPE,
+		SYSTEM_ID,
+		OBJ_DESC,
+		MANAGER_PER,
+		MANAGER_ORG,
+		STATUS,
+		JOB_ID,
+		JOB_TYPE,
+		JOB_SRC_FLAG,
+		SORT_NUM,
+		create_by,
+		create_date,
+		update_by,
+		update_date,
+		remarks,
+		del_flag
+		) values
+		<foreach collection="list" item="item" index="index"
+			separator=",">
+			( #{item.id,jdbcType=VARCHAR},
+			#{item.objName,jdbcType=VARCHAR},
+			#{item.objCode,jdbcType=VARCHAR},
+			#{item.objType,jdbcType=VARCHAR},
+			#{item.systemId,jdbcType=VARCHAR},
+			#{item.objDesc,jdbcType=VARCHAR},
+			#{item.managerPer,jdbcType=VARCHAR},
+			#{item.managerOrg,jdbcType=VARCHAR},
+			#{item.status,jdbcType=VARCHAR},
+			#{item.jobId,jdbcType=VARCHAR},
+			#{item.jobType,jdbcType=VARCHAR},
+			#{item.jobSrcFlag,jdbcType=VARCHAR},
+			#{item.sortNum,jdbcType=VARCHAR},
+			#{item.createBy.id,jdbcType=VARCHAR},
+			#{item.createDate,jdbcType=TIMESTAMP},
+			#{item.updateBy.id,jdbcType=VARCHAR},
+			#{item.updateDate,jdbcType=TIMESTAMP},
+			#{item.remarks,jdbcType=VARCHAR},
+			#{item.delFlag,jdbcType=VARCHAR}
+			)
+		</foreach>
+	</insert>
+
+</mapper>

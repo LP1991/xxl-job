@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcJobTransDataLinkDbDao">
+    
+	<sql id="dcJobTransDataLinkDbColumns">		
+		a.ID AS id,
+		a.job_id as jobId,
+		a.schema_name as schemaName,
+		a.table_name as tableName,
+		a.table_sql as tableSql,
+		a.table_column as tableColumn,
+		a.partition_column as partitionColumn,
+		a.partition_null AS partitionNull,
+		a.boundary_query as boundaryQuery,
+		a.STATUS AS status
+	</sql>
+	
+	<sql id="dcJobTransDataLinkDbJoins">
+    </sql>
+    
+	<select id="get" resultType="dcJobTransDataLinkDb">
+		SELECT
+			<include refid="dcJobTransDataLinkDbColumns"/>
+		FROM dc_job_transdata_link_db a
+		<include refid="dcJobTransDataLinkDbJoins"/>
+		WHERE a.job_id = #{id}
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_job_transdata_link_db(
+			ID, 
+			job_id, 
+			schema_name, 
+			table_name, 
+			table_sql, 
+			table_column, 
+			partition_column, 
+			partition_null, 
+			boundary_query, 
+			STATUS, 
+			DEL_FLAG
+		) VALUES (
+			#{id}, 
+			#{jobId}, 
+			#{schemaName}, 
+			#{tableName}, 
+			#{tableSql}, 
+			#{tableColumn}, 
+			#{partitionColumn}, 
+			#{partitionNull}, 
+			#{boundaryQuery}, 
+			#{status}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_job_transdata_link_db 
+		<set>
+			<if test="schemaName != null"> schema_name = #{schemaName}, </if>
+			<if test="tableName != null"> table_name = #{tableName}, </if>
+			<if test="tableSql != null"> table_sql = #{tableSql}, </if>
+			<if test="tableColumn != null"> table_column = #{tableColumn}, </if>
+			<if test="partitionColumn != null"> partition_column = #{partitionColumn}, </if>
+			<if test="partitionNull != null"> partition_null = #{partitionNull}, </if>
+			<if test="boundaryQuery != null"> boundary_query = #{boundaryQuery}, </if>
+			<if test="status != null"> STATUS = #{status} </if>
+		</set>	
+		 WHERE job_id = #{jobId} 
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_job_transdata_link_db 
+		WHERE job_id = #{jobId} 
+	</update>
+	
+	<update id="deleteByLogic">
+		UPDATE dc_job_transdata_link_db SET DEL_FLAG = #{DEL_FLAG_DELETE}
+		 WHERE job_id = #{jobId} 
+	</update>
+	
+</mapper>

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcJobTransDataDao">
+    
+	<sql id="dcJobTransDataColumns">		
+		a.ID AS id,
+		a.job_name as jobName,
+		a.job_desc as jobDesc,
+		a.from_link as fromLink,
+		a.to_link as toLink,
+		a.append_Type as appendType,
+		a.log_dir as logDir,
+		a.STATUS as status,
+		a.REMARKS AS "remarks",
+		a.SORT_NUM as sortNum,
+		a.CREATE_BY AS "createBy.id",
+		a.CREATE_DATE as "createDate",
+		a.UPDATE_BY AS "updateBy.id",
+		a.UPDATE_DATE AS "updateDate"
+	</sql>
+	
+	<sql id="dcJobTransDataJoins">
+	LEFT JOIN sys_user u ON u.id = a.create_by
+	LEFT JOIN sys_office o ON o.id = u.office_id
+    </sql>
+	
+	<sql id="dcJobTransDataSql">
+		  a.id as 'id',
+		  a.job_name as 'jobName',
+		  a.job_desc as 'jobDesc', 
+		  a.from_link as 'fromLink', 
+		  a.to_link as 'toLink',
+		  a.append_type as 'appendType',
+		  a.log_dir as logDir,
+		  a.sort_num as sortNum,
+		  a.STATUS as 'status',
+		  a.REMARKS as 'remarks',
+		  a.CREATE_BY AS "createBy.id",
+		  a.CREATE_DATE as "createDate",
+		  a.UPDATE_BY AS "updateBy.id",
+		  a.UPDATE_DATE AS "updateDate",
+		  b.schema_name as 'schemaName',
+		  b.table_NAME as 'tableName',
+		  b.table_sql as 'tableSql',
+		  b.table_column as 'tableColumn',
+		  b.partition_column as 'partitionColumn',
+		  b.partition_null as 'partitionNull',
+		  b.boundary_query as 'boundaryQuery',
+		  c.output_dir as 'outputDir',
+		  c.output_table as 'outputTable',
+		  c.is_create_table as isCreateTable,
+		  c.key_field as keyField,
+		  c.column_family as columnFamily,
+		  c.increment_type as 'incrementType',
+		  c.increment_field as 'incrementField',
+		  c.increment_value as 'incrementValue',
+		  c.partition_field as 'partitionField',
+		  c.partition_value as 'partitionValue',
+		  c.output_format as 'outputFormat' ,
+		  c.overRide_Null as 'overRideNull',
+		  c.null_value as 'nullValue',
+		  c.compres_format as 'compresFormat'
+    </sql>
+	<sql id="dcJobTransDataSqlJoins">
+		LEFT JOIN DC_JOB_TRANSDATA_LINK_DB b on a.ID = b.job_id
+		LEFT JOIN DC_JOB_TRANSDATA_LINK_HDFS c on a.ID = c.job_id
+		LEFT JOIN sys_user u ON u.id = a.create_by
+		LEFT JOIN sys_office o ON o.id = u.office_id
+    </sql>
+    
+	<select id="get" resultType="dcJobTransData">
+		SELECT
+			<include refid="dcJobTransDataColumns"/>
+		FROM dc_job_transData a
+		<include refid="dcJobTransDataJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+	
+
+	
+	<!-- 验证jobname不重复 -->
+	<select id="getJobName" resultType="dcJobTransData">
+		SELECT
+			<include refid="dcJobTransDataColumns"/>
+		FROM dc_job_transData a
+		<include refid="dcJobTransDataJoins"/>
+		WHERE a.job_name = #{jobName}
+		AND a.DEL_FLAG = 0
+	</select>
+    
+    <!-- 构建db采集对象 -->
+	<select id="buildJobData" resultType="dcJobDb2Hdfs">
+		SELECT
+		<include refid="dcJobTransDataSql"/>
+		 FROM DC_JOB_TRANSDATA a
+		<include refid="dcJobTransDataSqlJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+	
+	<!-- 查询数据列表 -->
+	<select id="buildList" resultType="dcJobDb2Hdfs">
+		SELECT
+		<include refid="dcJobTransDataSql"/>
+			,t.CONN_NAME as dbConnName
+			,t.SERVER_TYPE as dbServerType 
+		  FROM DC_JOB_TRANSDATA a
+		<include refid="dcJobTransDataSqlJoins"/>
+		  LEFT JOIN DC_DATA_SOURCE t on a.from_link = t.id
+		 WHERE a.DEL_FLAG = #{DEL_FLAG_NORMAL} 
+		<choose>
+	        <when test="id !=null and id != ''">
+	            AND a.id=#{id}
+	        </when>
+	        <otherwise>
+				<if test="jobName != null and jobName != ''"> AND INSTR(a.job_name, #{jobName})>0  </if>
+				<if test="fromLink != null and fromLink != ''"> AND a.FROM_LINK = #{fromLink} </if>
+				<if test="dbServerType != null and dbServerType != ''"> AND t.SERVER_TYPE = #{dbServerType} </if>
+	        </otherwise>
+	    </choose>
+		<!-- 数据范围过滤 -->
+		${sqlMap.dsf}
+		ORDER BY a.UPDATE_DATE desc 
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_job_transData(
+			ID, 
+			JOB_NAME, 
+			JOB_DESC, 
+			FROM_LINK, 
+			TO_LINK, 
+			APPEND_TYPE, 			
+			LOG_DIR,
+			REMARKS, 
+			STATUS, 
+			CREATE_BY, 
+			CREATE_DATE, 
+			UPDATE_BY, 
+			UPDATE_DATE, 
+			SORT_NUM, 
+			DEL_FLAG
+		) VALUES (
+			#{id}, 
+			#{jobName}, 
+			#{jobDesc}, 
+			#{fromLink}, 
+			#{toLink}, 
+			#{appendType}, 
+			#{logDir}, 
+			#{remarks}, 
+			#{status}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{sortNum}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_job_transData 
+		<set>
+			<if test="jobName != null"> JOB_NAME = #{jobName}, </if>
+			<if test="jobDesc != null"> JOB_DESC = #{jobDesc}, </if>
+			<if test="fromLink != null"> FROM_LINK = #{fromLink}, </if>
+			<if test="toLink != null"> TO_LINK = #{toLink}, </if>
+			<if test="appendType != null"> APPEND_TYPE = #{appendType}, </if>
+			<if test="logDir != null"> LOG_DIR = #{logDir}, </if>
+			<if test="status != null"> STATUS = #{status}, </if>
+			<if test="remarks != null"> REMARKS = #{remarks}, </if>
+			<if test="sortNum != null and sortNum>0"> SORT_NUM = #{sortNum}, </if>
+			<if test="updateBy.id != null"> update_by = #{updateBy.id}, </if>
+			<if test="updateDate != null"> update_date = #{updateDate} </if>
+		</set>	
+		WHERE ID = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_job_transData 
+		WHERE ID = #{id} 
+	</update>
+	
+	<update id="deleteByLogic">
+		UPDATE dc_job_transData SET 
+			DEL_FLAG = #{DEL_FLAG_DELETE}
+		WHERE ID = #{id} 
+	</update>
+	
+</mapper>

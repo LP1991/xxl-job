@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataexport.dao.DcJobExportDataDao">
+    
+	<sql id="dcJobExportDataColumns">
+		a.id AS "id",
+		a.job_name AS "jobName",
+		a.job_desc AS "jobDesc",
+		a.from_link AS "fromLink",
+		a.metaData_id AS "metaDataId",
+		a.data_path AS "dataPath",
+		a.map_num AS "mapNum",
+		a.field_split_by AS "fieldSplitBy",
+		a.null_string AS "nullString",
+		a.null_non_string AS "nullNonString",
+		a.to_link AS "toLink",
+		a.schema_name AS "schemaName",
+		a.table_name AS "tableName",
+		a.assign_column AS "assignColumn",
+		a.table_column AS "tableColumn",
+		a.is_clear_data AS "isClearData",
+		a.is_update AS "isUpdate",
+		a.update_key AS "updateKey",
+		a.update_mode AS "updateMode",
+		a.log_dir AS "logDir",
+		a.status AS "status",
+		a.sort_num AS "sortNum",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="dcJobExportDataJoins">
+		LEFT JOIN sys_user u ON u.id = a.create_by
+		LEFT JOIN sys_office o ON o.id = u.office_id
+	</sql>
+	
+    
+	<select id="get" resultType="DcJobExportData" >
+		SELECT 
+			<include refid="dcJobExportDataColumns"/>
+		FROM dc_job_exportdata a
+		<include refid="dcJobExportDataJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<!-- 验证jobname不重复 -->
+	<select id="getObjByName" resultType="DcJobExportData">
+		SELECT * FROM dc_job_exportdata 
+		 WHERE job_name = #{jobName} AND DEL_FLAG = 0
+		   <if test="id != null and id != ''"> and id != #{id}</if>
+	</select>
+	
+	<select id="findList" resultType="DcJobExportData" >
+		SELECT 
+			<include refid="dcJobExportDataColumns"/>
+			, s.SERVER_TYPE AS "dbType"
+			, s.conn_name AS "toLinkName"
+		FROM dc_job_exportdata a
+		LEFT JOIN dc_data_source s on a.to_link=s.ID
+		<include refid="dcJobExportDataJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<choose>
+	        <when test="id !=null and id != ''"> AND a.id=#{id} </when>
+	        <otherwise>
+				<if test="jobName != null and jobName != ''"> and instr(a.job_name, #{jobName})>0</if>
+	        </otherwise>
+	    </choose>
+		</where>
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DcJobExportData" >
+		SELECT 
+			<include refid="dcJobExportDataColumns"/>
+		FROM dc_job_exportdata a
+		<include refid="dcJobExportDataJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_job_exportdata(
+			id,
+			job_name,
+			job_desc,
+			from_link,
+			metaData_id,
+			data_path,
+			map_num,
+			field_split_by,
+			null_string,
+			null_non_string,
+			to_link,
+			schema_name,
+			table_name,
+			assign_column,
+			table_column,
+			is_clear_data,
+			is_update,
+			update_key,
+			update_mode,
+			log_dir,
+			status,
+			sort_num,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{jobName},
+			#{jobDesc},
+			#{fromLink},
+			#{metaDataId},
+			#{dataPath},
+			#{mapNum},
+			#{fieldSplitBy},
+			#{nullString},
+			#{nullNonString},
+			#{toLink},
+			#{schemaName},
+			#{tableName},
+			#{assignColumn},
+			#{tableColumn},
+			#{isClearData},
+			#{isUpdate},
+			#{updateKey},
+			#{updateMode},
+			#{logDir},
+			#{status},
+			#{sortNum},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_job_exportdata 
+		<set>
+			<if test="jobName != null"> job_name = #{jobName}, </if>  
+			<if test="jobDesc != null"> job_desc = #{jobDesc}, </if>  
+			<if test="fromLink != null"> from_link = #{fromLink}, </if>  
+			<if test="metaDataId != null"> metaData_id = #{metaDataId}, </if>  
+			<if test="dataPath != null"> data_path = #{dataPath}, </if>  
+			<if test="mapNum != null and mapNum >0"> map_num = #{mapNum}, </if>  
+			<if test="fieldSplitBy != null"> field_split_by = #{fieldSplitBy}, </if>  
+			<if test="nullString != null"> null_string = #{nullString}, </if>  
+			<if test="nullNonString != null"> null_non_string = #{nullNonString}, </if>  
+			<if test="toLink != null"> to_link = #{toLink}, </if>  
+			<if test="schemaName != null"> schema_name = #{schemaName}, </if>  
+			<if test="tableName != null"> table_name = #{tableName}, </if>  
+			<if test="assignColumn != null"> assign_column = #{assignColumn}, </if>  
+			<if test="tableColumn != null"> table_column = #{tableColumn}, </if>  
+			<if test="isClearData != null"> is_clear_data = #{isClearData}, </if>  
+			<if test="isUpdate != null"> is_update = #{isUpdate}, </if>  
+			<if test="updateKey != null"> update_key = #{updateKey}, </if>  
+			<if test="updateMode != null"> update_mode = #{updateMode}, </if>  
+			<if test="logDir != null"> log_dir = #{logDir}, </if>  
+			<if test="status != null"> status = #{status}, </if>  
+			<if test="sortNum != null and sortNum >0 "> sort_num = #{sortNum}, </if>  
+			<if test="delFlag != null"> del_flag = #{delFlag}, </if>  
+			<if test="remarks != null"> remarks = #{remarks}, </if>  
+			<if test="updateBy.id != null">update_by = #{updateBy.id}, </if>  
+			<if test="updateDate != null"> update_date = #{updateDate} </if>  
+		</set> 	
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_job_exportdata
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE dc_job_exportdata SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="DcJobExportData" statementType="STATEMENT">
+		select * FROM dc_job_exportdata  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

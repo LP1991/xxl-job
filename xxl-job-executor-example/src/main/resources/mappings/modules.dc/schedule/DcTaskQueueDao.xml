@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.schedule.dao.DcTaskQueueDao">
+    
+	<sql id="dcTaskQueueColumns">		
+		a.id AS id,
+		a.queue_name AS "queueName",
+		a.queue_desc AS "queueDesc",
+		a.status AS "status",
+		a.priority AS "priority",
+		a.create_by AS "createBy.id",
+		u.`name` as "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="dcTaskQueueJoins">
+		LEFT JOIN sys_user u ON u.id = a.create_by
+		LEFT JOIN sys_office o ON o.id = u.office_id
+	</sql>
+	
+	<select id="get" resultType="DcTaskQueue">
+		SELECT
+			<include refid="dcTaskQueueColumns"/>
+		FROM dc_task_queue a
+		<include refid="dcTaskQueueJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+	
+	<!-- 验证jobname不重复 -->
+	<select id="getObjByName" resultType="DcTaskQueue">
+		SELECT * FROM dc_task_queue 
+		 WHERE queue_name = #{queueName} 
+		   AND DEL_FLAG = 0
+		<if test="id != null and id != ''"> and id != #{id}</if>
+	</select>
+    
+	<select id="findList" resultType="DcTaskQueue">
+		SELECT
+			<include refid="dcTaskQueueColumns"/>
+		FROM dc_task_queue a
+		<include refid="dcTaskQueueJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<choose>
+		        <when test="id !=null and id != ''"> AND a.id=#{id} </when>
+		        <otherwise>
+					<if test="queueName != null and queueName != ''"> and instr(a.queue_name, #{queueName})>0</if>
+		        </otherwise>
+		    </choose>
+		</where>
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>		
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_task_queue(
+			id, 
+			queue_name,
+			queue_desc, 
+			priority,
+			status, 
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id}, 
+			#{queueName}, 
+			#{queueDesc}, 
+			#{priority}, 
+			#{status},  
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_task_queue 
+		<set>
+			<if test="queueName != null"> queue_name = #{queueName}, </if>  
+			<if test="queueDesc != null"> queue_desc = #{queueDesc}, </if>  
+			<if test="priority != null and priority >0 "> priority = #{priority}, </if>  
+			<if test="status != null"> status = #{status}, </if>  
+			<if test="delFlag != null"> del_flag = #{delFlag}, </if>  
+			<if test="remarks != null"> remarks = #{remarks}, </if>  
+			<if test="updateBy.id != null">update_by = #{updateBy.id}, </if>  
+			<if test="updateDate != null"> update_date = #{updateDate} </if>  
+		</set> 	
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_task_queue WHERE ID = #{id} 
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE dc_task_queue SET del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

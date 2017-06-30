@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.metadata.dao.DcObjectLableDao">
+    
+	<sql id="dcObjectLableColumns">
+		a.ID AS "id",
+		a.LABEL_NAME AS "labelName",
+		a.LABEL_DESC AS "labelDesc",
+		a.DEL_FLAG AS "delFlag",
+		a.STATUS AS "status",
+		a.CREATE_BY AS "createBy.id",
+		a.CREATE_DATE AS "createDate",
+		a.UPDATE_BY AS "updateBy.id",
+		a.UPDATE_DATE AS "updateDate",
+		a.REMARKS AS "remarks"
+	</sql>
+
+	<sql id="dcObjectLableJoins">
+	</sql>
+    
+	<select id="get" resultType="DcObjectLable" >
+		SELECT 
+			<include refid="dcObjectLableColumns"/>
+		FROM dc_obj_lable a
+		<include refid="dcObjectLableJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+		
+	<insert id="insert">
+		INSERT INTO dc_obj_lable(
+			ID,
+			LABEL_NAME,
+			LABEL_DESC,
+			DEL_FLAG,
+			STATUS,
+			CREATE_BY,
+			CREATE_DATE,
+			UPDATE_BY,
+			UPDATE_DATE,
+			REMARKS
+		) VALUES (
+			#{id},
+			#{labelName},
+			#{labelDesc},
+			#{delFlag},
+			#{status},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_obj_lable 
+		<trim prefix="set" suffixOverrides=",">
+			<if test="id != null"> ID = #{id}, </if>
+			<if test="labelName != null"> LABEL_NAME = #{labelName}, </if>
+			<if test="labelDesc != null"> LABEL_DESC = #{labelDesc}, </if>
+			<if test="delFlag != null"> LABEL_DESC = #{delFlag}, </if>
+			<if test="status != null"> DEL_FLAG = #{status}, </if>
+			<if test="createBy.id != null"> STATUS = #{createBy.id}, </if>
+			<if test="createDate != null"> CREATE_BY = #{createDate}, </if>
+			<if test="updateBy.id != null"> CREATE_DATE = #{updateBy.id}, </if>
+			<if test="updateDate != null"> UPDATE_BY = #{updateDate}, </if>
+			<if test="remarks != null"> REMARKS = #{remarks}, </if>
+		</trim>
+		WHERE ID = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_obj_lable
+		WHERE ID = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE dc_obj_lable SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+</mapper>

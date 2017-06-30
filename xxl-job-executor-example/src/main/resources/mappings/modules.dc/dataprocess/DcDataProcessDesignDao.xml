@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcDataProcessDesignDao">
+	
+	<sql id="dcDataProcessDesignColumns">
+		a.ID As "id",
+		a.DESIGN_NAME As "designName",
+		a.DESIGN_DESC As "designDesc",
+		a.STATUS As "status",
+		a.SORT_NUM As "sortNum",
+		a.REMARKS AS "remarks",
+		a.CREATE_BY AS "createBy.id",
+		u.`NAME` AS "createBy.name",
+		a.CREATE_DATE as "createDate",
+		a.UPDATE_BY AS "updateBy.id",
+		a.UPDATE_DATE as "updateDate",
+		a.DEL_FLAG as "delFlag"
+	</sql>
+	
+	<sql id="dcDataProcessDesignJoins">
+	LEFT JOIN sys_user u ON u.id = a.create_by
+	LEFT JOIN sys_office o ON o.id = u.office_id
+    </sql>
+    
+	<select id="findList" resultType="DcDataProcessDesign" >
+		SELECT 
+			<include refid="dcDataProcessDesignColumns"/>
+		FROM dc_data_process_design a
+		<include refid="dcDataProcessDesignJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="designName != null and designName != ''"> and INSTR(DESIGN_NAME, #{designName})>0</if>
+			<if test="status != null and status != ''"> and STATUS = #{status}</if>
+		</where>
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.CREATE_DATE DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="get" resultType="DcDataProcessDesign">
+		SELECT
+			<include refid="dcDataProcessDesignColumns"/>
+			,a.DESIGN_JSON As "designJson"
+			,a.DESIGN_SCRIPT As "designScript"
+		FROM dc_data_process_design a
+		<include refid="dcDataProcessDesignJoins"/>
+		WHERE a.id = #{id}
+		AND a.DEL_FLAG = '0'
+	</select>
+	
+	<!-- 验证jobname不重复 -->
+	<select id="getDesignByName" resultType="DcDataProcessDesign">
+		SELECT id FROM dc_data_process_design 
+		WHERE DESIGN_NAME = #{designName} AND DEL_FLAG = 0
+		 <if test="id != null and id != ''"> and id != #{id}</if>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_data_process_design(
+			ID, 
+			DESIGN_NAME, 
+			DESIGN_DESC, 
+			DESIGN_JSON, 
+			DESIGN_SCRIPT, 
+			STATUS,
+			SORT_NUM,
+			REMARKS, 
+			CREATE_BY, 
+			CREATE_DATE, 
+			UPDATE_BY, 
+			UPDATE_DATE, 
+			DEL_FLAG
+		) VALUES (
+			#{id}, 
+			#{designName}, 
+			#{designDesc}, 
+			#{designJson}, 
+			#{designScript}, 
+			#{status}, 
+			#{sortNum}, 
+			#{remarks}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_data_process_design 
+		<set>
+			<if test="id!=null"> ID = #{id},</if>
+			<if test="designName!=null"> DESIGN_NAME = #{designName},</if>
+			<if test="designDesc!=null"> DESIGN_DESC = #{designDesc},</if>
+			<if test="designJson!=null"> DESIGN_JSON = #{designJson},</if>
+			<if test="designScript"> DESIGN_SCRIPT = #{designScript},</if>
+			<if test="status!=null"> STATUS = #{status},</if>
+			<if test="sortNum!=null"> SORT_NUM = #{sortNum},</if>
+			<if test="remarks!=null"> REMARKS = #{remarks},</if>
+			<if test="updateBy.id!=null"> UPDATE_BY = #{updateBy.id},</if>
+			<if test="updateDate!=null"> UPDATE_DATE = #{updateDate}</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_data_process_design 
+		WHERE ID = #{id} 
+	</update>
+	
+	<update id="deleteByLogic">
+		UPDATE dc_data_process_design SET del_flag = #{DEL_FLAG_DELETE} WHERE ID = #{id}
+	</update>
+	
+</mapper>

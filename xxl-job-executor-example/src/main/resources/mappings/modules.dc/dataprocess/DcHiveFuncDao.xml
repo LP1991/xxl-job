@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcHiveFuncDao">
+    
+	<sql id="dcHiveFuncColumns">
+		a.ID AS "id",
+		a.FUNC_NAME AS "funcName",
+		a.FUNC_DESC AS "funcDesc",
+		a.FUNC_TYPE AS "funcType",
+		a.JAR_PATH AS "jarPath",
+		a.CLASS_PATH AS "classPath",
+		a.JAR_NAME AS "jarName",
+		a.FUNC_DEMO AS "funcDemo",
+		a.DEL_FLAG AS "delFlag",
+		a.STATUS AS "status",
+		a.SORT_NUM AS "sortNum",
+		a.REMARKS AS "remarks",
+		a.CREATE_BY AS "createBy.id",
+		a.CREATE_DATE as "createDate",
+		a.UPDATE_BY AS "updateBy.id",
+		a.UPDATE_DATE as "updateDate"
+	</sql>
+	
+	<sql id="dcHiveFuncJoins">
+	</sql>
+    
+	<select id="get" resultType="DcHiveFunction" >
+		SELECT 
+			<include refid="dcHiveFuncColumns"/>
+		FROM dc_hive_function a
+		<include refid="dcHiveFuncJoins"/>
+		WHERE a.ID= #{id}
+	</select>
+		
+	<select id="findList" resultType="DcHiveFunction" >
+		SELECT 
+			<include refid="dcHiveFuncColumns"/>
+		FROM dc_hive_function a
+		<include refid="dcHiveFuncJoins"/>
+		<where>
+			<if test="funcType != null and funcType != ''"> AND a.FUNC_TYPE = #{funcType} </if>
+			<if test="funcName != null and funcName != ''"> AND a.FUNC_NAME like CONCAT('%', #{funcName}, '%') </if>
+		</where>
+		order by  a.SORT_NUM
+	</select>
+	
+	<select id="findAllList" resultType="DcHiveFunction" >
+		SELECT 
+			<include refid="dcHiveFuncColumns"/>
+		FROM dc_hive_function a
+		<include refid="dcHiveFuncJoins"/>
+		WHERE a.DEL_FLAG = 0
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.CREATE_DATE
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_hive_function(
+		  ID,
+		FUNC_NAME,
+		FUNC_DESC,
+		FUNC_TYPE,
+		JAR_PATH,
+		CLASS_PATH,
+		JAR_NAME,
+		FUNC_DEMO,
+		DEL_FLAG,
+		STATUS,
+		SORT_NUM,
+		REMARKS,
+		CREATE_BY,
+		CREATE_DATE,
+		UPDATE_BY,
+		UPDATE_DATE
+		) VALUES (
+		    #{id},
+			#{funcName},
+			#{funcDesc},
+			#{funcType},
+			#{jarPath},
+			#{classPath},
+			#{jarName},
+			#{funcDemo},
+			#{delFlag},
+			#{status},
+			#{sortNum},
+			#{remarks},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate}
+		)
+	</insert>
+
+	<update id="update">
+		UPDATE dc_hive_function SET
+		FUNC_NAME=#{funcName},
+		FUNC_DESC=#{funcDesc},
+		FUNC_TYPE=#{funcType},
+		JAR_PATH=#{jarPath},
+		CLASS_PATH=#{classPath},
+		JAR_NAME=#{jarName},
+		STATUS=#{status},
+		FUNC_DEMO=#{funcDemo},
+		DEL_FLAG =#{delFlag},
+		REMARKS= #{remarks},
+		UPDATE_BY= #{updateBy.id},
+		UPDATE_DATE=#{updateDate}
+		WHERE ID= #{id}
+	</update>
+	
+	<!-- 验证jobname不重复 -->
+	<select id="getFuncName" resultType="DcHiveFunction">
+		SELECT
+			<include refid="dcHiveFuncColumns"/>
+		FROM dc_hive_function a
+		<include refid="dcHiveFuncJoins"/>
+		WHERE a.FUNC_NAME = #{funcName}
+	</select>
+
+	<select id="findUniqueByProperty" resultType="DcHiveFunction" statementType="STATEMENT">
+		SELECT
+		<include refid="dcHiveFuncColumns"/>
+		FROM dc_hive_function a
+		<include refid="dcHiveFuncJoins"/>
+		where a.${propertyName} = '${value}'
+	</select>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_hive_function
+		WHERE ID = #{id}
+	</update>
+	
+</mapper>

@@ -6,7 +6,7 @@ import com.xxl.job.core.biz.model.ReturnT;
  * remote job handler
  * @author xuxueli 2015-12-19 19:06:38
  */
-public abstract class IJobHandler {
+public interface IJobHandler {
 
 	/**
 	 * job handler
@@ -14,6 +14,6 @@ public abstract class IJobHandler {
 	 * @return
 	 * @throws Exception
 	 */
-	public abstract ReturnT<String> execute(String... params) throws Exception;
+	ReturnT<String> execute(String... params) throws Exception;
 	
 }

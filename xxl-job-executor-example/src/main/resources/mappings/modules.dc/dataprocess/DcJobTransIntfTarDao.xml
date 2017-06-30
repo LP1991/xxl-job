@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcJobTransIntfTarDao">
+    
+	<sql id="dcJobTransIntfTarColumns">
+		a.ID AS id,
+		a.jobId as jobId,
+		a.connId as connId,
+		a.schemaName as schemaName,
+		a.create_flag as createFlag,
+		a.tarName as tarName
+	</sql>
+	
+	<sql id="dcJobTransIntfTarJoins">
+    </sql>
+    
+	<select id="get" resultType="dcJobTransIntfTar">
+		SELECT
+			<include refid="dcJobTransIntfTarColumns"/>
+		FROM dc_job_transIntf_tar a
+		<include refid="dcJobTransIntfTarJoins"/>
+		WHERE a.jobId = #{jobId}
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_job_transIntf_tar(
+			ID, 
+			jobId, 
+			connId,
+			schemaName,
+			create_flag,
+			tarName
+		) VALUES (
+			#{id}, 
+			#{jobId},
+			#{connId},
+			#{schemaName},
+			#{createFlag},
+			#{tarName}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_job_transIntf_tar 
+		<set>
+			<if test="connId != null"> connId = #{connId}, </if>
+			<if test="schemaName != null"> schemaName = #{schemaName}, </if>
+			<if test="tarName != null"> tarName = #{tarName}, </if>
+			<if test="createFlag != null"> create_flag = #{createFlag}, </if>
+		</set>
+		 WHERE jobId = #{jobId}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_job_transIntf_tar 
+		WHERE jobId = #{jobId} 
+	</update>
+	
+</mapper>

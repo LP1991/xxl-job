@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcJobTransFileDao">
+    
+	<sql id="dcJobTransFileColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.description AS "description",
+		a.jobname AS "jobname",
+		a.status AS "status",
+		DATE_FORMAT(c.upload_time, '%Y-%c-%e %k:%i:%s') as "uploadTime",
+		d.ftp_ip AS "dcJobTransFileHdfs.ip",
+		d.port AS "dcJobTransFileHdfs.port",
+		d.account AS "dcJobTransFileHdfs.account",
+		d.pathname AS "dcJobTransFileHdfs.pathname",
+		d.password AS "dcJobTransFileHdfs.password"
+	</sql>
+	
+	<sql id="dcJobTransFileJoins">
+		LEFT JOIN (select job_id,max(upload_time) upload_time from dc_job_hdfslog c group by job_id) c ON c.job_id = a.id
+		LEFT JOIN dc_job_transfile_hdfs d ON d.job_id = a.id
+		LEFT JOIN sys_user u ON u.id = a.create_by
+		LEFT JOIN sys_office o ON o.id = u.office_id
+	</sql>
+	
+    
+	<select id="get" resultType="DcJobTransFile" >
+		SELECT 
+			<include refid="dcJobTransFileColumns"/>
+		FROM dc_job_transfile a
+		<include refid="dcJobTransFileJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<!-- 验证jobname不重复 -->
+	<select id="getJobName" resultType="DcJobTransFile">
+		SELECT
+		*
+		FROM dc_job_transfile 
+		WHERE jobname = #{jobname}
+		AND DEL_FLAG = 0
+	</select>
+	
+	<select id="findList" resultType="DcJobTransFile" >
+		SELECT 
+			<include refid="dcJobTransFileColumns"/>
+		FROM dc_job_transfile a
+		<include refid="dcJobTransFileJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<choose>
+	        <when test="id !=null and id != ''">
+	            AND a.id=#{id}
+	        </when>
+	        <otherwise>
+				<if test="jobname != null and jobname != ''"> and a.jobname LIKE CONCAT('%', #{jobname}, '%')</if>
+				<if test="status != null and status != ''"> and a.status = #{status}</if>
+	        </otherwise>
+	    </choose>
+		</where>
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DcJobTransFile" >
+		SELECT 
+			<include refid="dcJobTransFileColumns"/>
+		FROM dc_job_transfile a
+		<include refid="dcJobTransFileJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_job_transfile(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			description,
+			status,
+			jobname
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{description},
+			#{status},
+			#{jobname}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_job_transfile 
+		<set>
+			<if test="status != null"> status = #{status}, </if>  
+			<if test="remarks != null"> remarks = #{remarks}, </if>  
+			<if test="delFlag != null"> del_flag = #{delFlag}, </if>  
+			<if test="description != null"> description = #{description}, </if>  
+			<if test="jobname != null"> jobname = #{jobname}, </if>  
+<!--			<if test="createBy.id != null"> create_by = #{createBy.id}, </if>
+			<if test="createDate != null"> create_date = #{createDate}, </if>  -->
+			<if test="updateBy.id != null"> update_by = #{updateBy.id}, </if>  
+			<if test="updateDate != null"> update_date = #{updateDate} </if>  
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_job_transfile WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE dc_job_transfile SET  del_flag = #{DEL_FLAG_DELETE} WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="DcJobTransFile" statementType="STATEMENT">
+		select * FROM dc_job_transfile  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

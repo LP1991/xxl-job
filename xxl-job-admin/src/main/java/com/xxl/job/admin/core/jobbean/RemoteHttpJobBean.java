@@ -94,7 +94,7 @@ public class RemoteHttpJobBean extends QuartzJobBean {
     public ReturnT<String> doTrigger(TriggerParam triggerParam, XxlJobInfo jobInfo, XxlJobLog jobLog){
 		StringBuffer triggerSb = new StringBuffer();
 
-		// exerutor address list
+		// executor address list
 		ArrayList<String> addressList = null;
 		XxlJobGroup group = XxlJobDynamicScheduler.xxlJobGroupDao.load(jobInfo.getJobGroup());
 		if (group.getAddressType() == 0) {

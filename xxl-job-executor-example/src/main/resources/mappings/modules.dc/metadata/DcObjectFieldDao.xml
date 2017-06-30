@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.metadata.dao.DcObjectFieldDao">
+    
+	<sql id="dcObjectFieldColumns">
+		a.OBJ_ID AS "id",
+		a.BELONG2_ID AS "belong2Id",
+		a.FIELD_NAME AS "fieldName",
+		a.FIELD_DESC AS "fieldDesc",
+		a.FIELD_TYPE AS "fieldType",
+		a.FIELD_LENG AS "fieldLeng",
+		a.DECIMAL_NUM AS "decimalNum",
+		a.IS_KEY AS "isKey",
+		a.VALIDATE_RULE AS "validateRule",
+		a.IS_NULL AS "isNull",
+		a.DEFAULT_VALUE AS "defaultVal",
+		a.SORT_NUM AS "sortNum",
+		a.REMARKS AS "remarks"
+	</sql>
+
+	<sql id="dcObjectFieldJoins">
+	</sql>
+    
+	<select id="get" resultType="DcObjectField" >
+		SELECT 
+			<include refid="dcObjectFieldColumns"/>
+		FROM dc_obj_field a
+		<include refid="dcObjectFieldJoins"/>
+		WHERE a.OBJ_ID = #{id}
+	</select>
+	
+	<select id="getByBelong2Id" resultType="java.util.HashMap" statementType="STATEMENT" >
+	    SELECT
+			<include refid="dcObjectFieldColumns"/>
+		FROM dc_obj_field a
+		<include refid="dcObjectFieldJoins"/>
+		WHERE a.BELONG2_ID = '${belong2Id}'
+		ORDER BY a.FIELD_NAME
+	</select>
+		
+	<insert id="insert">
+		INSERT INTO dc_obj_field(
+			OBJ_ID ,
+			BELONG2_ID,
+			FIELD_NAME,
+			FIELD_DESC,
+			FIELD_TYPE,
+			FIELD_LENG,
+			DECIMAL_NUM,
+			IS_KEY,
+			VALIDATE_RULE,
+			IS_NULL,
+			DEFAULT_VALUE,
+			SORT_NUM,
+			REMARKS
+		) VALUES (
+			#{id},
+			#{belong2Id},
+			#{fieldName},
+			#{fieldDesc},
+			#{fieldType},
+			#{fieldLeng},
+			#{decimalNum},
+			#{isKey},
+			#{validateRule},
+			#{isNull},
+			#{defaultVal},
+			#{sortNum},
+			#{remarks}
+		)
+	</insert>
+		<!-- 批量插入字段元数据 -->
+	<insert id="batchInsert" parameterType="java.util.List">
+		INSERT INTO dc_obj_field(
+			OBJ_ID ,
+			BELONG2_ID,
+			FIELD_NAME,
+			FIELD_DESC,
+			FIELD_TYPE,
+			FIELD_LENG,
+			DECIMAL_NUM,
+			IS_KEY,
+			VALIDATE_RULE,
+			IS_NULL,
+			DEFAULT_VALUE,
+			SORT_NUM,
+			REMARKS
+		) values
+		<foreach collection="list" item="item" index="index" separator="," >  
+		(    #{item.id,jdbcType=VARCHAR},
+			#{item.belong2Id,jdbcType=VARCHAR},
+			#{item.fieldName,jdbcType=VARCHAR},
+			#{item.fieldDesc,jdbcType=VARCHAR},
+			#{item.fieldType,jdbcType=VARCHAR},
+			#{item.fieldLeng,jdbcType=VARCHAR},
+			#{item.decimalNum,jdbcType=VARCHAR},
+			#{item.isKey,jdbcType=VARCHAR},
+			#{item.validateRule,jdbcType=VARCHAR},
+			#{item.isNull,jdbcType=VARCHAR},
+			#{item.defaultVal,jdbcType=VARCHAR},
+			#{item.sortNum,jdbcType=VARCHAR},
+			#{item.remarks,jdbcType=VARCHAR}
+		)
+		</foreach> 
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_obj_field 
+		<trim prefix="set" suffixOverrides=",">
+			<if test="id != null"> OBJ_ID = #{id}, </if>
+			<if test="belong2Id != null"> BELONG2_ID = #{belong2Id}, </if>
+			<if test="fieldName != null"> FIELD_NAME = #{fieldName}, </if>
+			<if test="fieldDesc != null"> FIELD_DESC = #{fieldDesc}, </if>
+			<if test="fieldType != null"> FIELD_TYPE = #{fieldType}, </if>
+			<if test="fieldLeng != null"> FIELD_LENG = #{fieldLeng}, </if>
+			<if test="decimalNum != null"> DECIMAL_NUM = #{decimalNum}, </if>
+			<if test="isKey != null"> IS_KEY = #{isKey}, </if>
+			<if test="validateRule != null"> VALIDATE_RULE = #{validateRule}, </if>
+			<if test="isNull != null"> IS_NULL = #{isNull}, </if>
+			<if test="defaultVal != null"> DEFAULT_VALUE = #{defaultVal}, </if>
+			<if test="sortNum != null"> SORT_NUM = #{sortNum}, </if>
+			<if test="remarks != null"> REMARKS = #{remarks}, </if>
+		</trim>
+		WHERE OBJ_ID = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	
+	<update id="delete">
+		DELETE FROM dc_obj_field WHERE OBJ_ID = #{id}
+	</update>
+	
+	<update id="deleteByBelong2Id">
+		DELETE FROM dc_obj_field WHERE BELONG2_ID = '${belong2Id}'
+	</update>
+	
+		<select id="getDB2Id" resultType="DcObjectField" statementType="STATEMENT" >
+	SELECT
+			<include refid="dcObjectFieldColumns"/>
+		FROM dc_obj_field a
+		<include refid="dcObjectFieldJoins"/>
+		WHERE a.BELONG2_ID = '${belong2Id}'
+		ORDER BY a.FIELD_NAME
+	</select>
+	
+	<select id="findList" resultType="DcObjectField" >
+		SELECT 
+			<include refid="dcObjectFieldColumns"/>
+		FROM dc_obj_field a
+		<include refid="dcObjectFieldJoins"/>
+		<where>
+			<if test="belong2Id != null and belong2Id != ''"> AND a.BELONG2_ID=#{belong2Id} </if>
+		</where>
+		${sqlMap.dsf}
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+		</choose>
+	</select>
+</mapper>

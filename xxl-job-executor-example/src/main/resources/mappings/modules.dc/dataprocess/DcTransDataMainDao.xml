@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcTransDataMainDao">
+    
+	<sql id="dcTransDataMainColumns">		
+		a.ID AS id,
+		a.job_name as jobName,
+		a.job_desc as jobDesc,
+		a.job_path as jobPath,
+		a.input_type as inputType,
+		a.input_name as inputName,
+		a.output_type as outputType,
+		a.output_name as outputName,
+		a.trans_type as transType,
+		a.STATUS as status,
+		a.RESULT_STATUS as resultStatus,
+		a.REMARKS AS "remarks",
+		a.SORT_NUM as sortNum,
+		a.CREATE_BY AS "createBy.id",
+		u.`NAME` AS "createBy.name",
+		a.CREATE_DATE as "createDate",
+		a.UPDATE_BY AS "updateBy.id",
+		a.UPDATE_DATE AS "updateDate",
+		a.DEL_FLAG AS delFlag
+	</sql>
+	
+	<sql id="dcTransDataMainJoins">
+	LEFT JOIN sys_user u ON u.id = a.create_by
+	LEFT JOIN sys_office o ON o.id = u.office_id
+    </sql>
+    
+	<select id="get" resultType="dcTransDataMain">
+		SELECT
+			<include refid="dcTransDataMainColumns"/>
+		FROM dc_transData_main a
+		<include refid="dcTransDataMainJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+	
+	<!-- 验证jobname不重复 -->
+	<select id="getJobName" resultType="dcTransDataMain">
+		SELECT
+			<include refid="dcTransDataMainColumns"/>
+		FROM dc_transData_main a
+		<include refid="dcTransDataMainJoins"/>
+		WHERE a.job_name = #{jobName}
+		 AND a.DEL_FLAG = 0
+	</select>
+	
+	<!-- 查询数据列表 -->
+	<select id="findList" resultType="dcTransDataMain">
+		SELECT
+			<include refid="dcTransDataMainColumns"/>
+		  FROM dc_transData_main a 
+		  <include refid="dcTransDataMainJoins"/>
+		  WHERE a.DEL_FLAG = #{DEL_FLAG_NORMAL}
+		<if test="jobName != null and jobName != ''"> AND INSTR(a.job_name, #{jobName})>0  </if>
+		<if test="jobDesc != null and jobDesc != ''"> AND instr(a.job_desc, #{jobDesc})>0  </if>
+		<if test="inputType != null and inputType != ''"> AND input_type = #{inputType} </if>
+		<if test="inputName != null and inputName != ''"> AND instr(input_name, #{inputName})>0 </if>
+		<if test="outputType != null and outputType != ''"> AND output_type = #{outputType} </if>
+		<if test="outputName != null and outputName != ''"> AND instr(input_type, #{outputName})>0 </if>
+		<if test="status != null and status != ''"> AND status = #{status} </if>
+		<if test="resultStatus != null and resultStatus != ''"> AND RESULT_STATUS = #{resultStatus} </if>
+		<!-- 数据范围过滤 -->
+		${sqlMap.dsf}
+		ORDER BY a.UPDATE_DATE DESC
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_transData_main(
+			ID, 
+			JOB_NAME, 
+			JOB_DESC, 
+			job_path, 
+			input_type, 
+			input_name, 
+			output_type, 
+			output_name, 
+			trans_type, 
+			REMARKS, 
+			STATUS, 
+			RESULT_STATUS, 
+			CREATE_BY, 
+			CREATE_DATE, 
+			UPDATE_BY, 
+			UPDATE_DATE, 
+			SORT_NUM, 
+			DEL_FLAG
+		) VALUES (
+			#{id}, 
+			#{jobName}, 
+			#{jobDesc}, 
+			#{jobPath}, 
+			#{inputType}, 
+			#{inputName}, 
+			#{outputType}, 
+			#{outputName}, 
+			#{transType}, 
+			#{remarks}, 
+			#{status}, 
+			#{resultStatus}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{sortNum}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_transData_main 
+		<set>
+			<if test="jobName != null"> JOB_NAME = #{jobName}, </if>
+			<if test="jobDesc != null"> JOB_DESC = #{jobDesc}, </if>
+			<if test="jobPath != null"> job_path = #{jobPath}, </if>
+			<if test="inputType != null"> input_type = #{inputType}, </if>
+			<if test="inputName != null"> input_name = #{inputName}, </if>
+			<if test="outputType != null"> output_type = #{outputType}, </if>
+			<if test="outputName != null"> output_name = #{outputName}, </if>
+			<if test="transType != null"> trans_type = #{transType}, </if>
+			<if test="status != null"> STATUS = #{status}, </if>
+			<if test="resultStatus != null"> RESULT_STATUS = #{resultStatus}, </if>
+			<if test="remarks != null"> REMARKS = #{remarks}, </if>
+			<if test="sortNum != null"> SORT_NUM = #{sortNum}, </if>
+			<if test="updateBy.id != null"> update_by = #{updateBy.id}, </if>
+			<if test="updateDate != null"> update_date = #{updateDate} </if>
+		</set>	
+		WHERE ID = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_transData_main  WHERE ID = #{id} 
+	</update>
+	
+	<update id="deleteByLogic">
+		UPDATE dc_transData_main SET  DEL_FLAG = #{DEL_FLAG_DELETE} WHERE ID = #{id} 
+	</update>
+	
+</mapper>

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcJobTransHdfsDao">
+    
+	<sql id="dcJobTransHdfsColumns">		
+		a.ID AS id,
+		a.job_name as jobName,
+		a.job_desc as jobDesc,
+		a.src_hdfs_address as srcHdfsAddress,
+		a.src_hdfs_dir as srcHdfsDir,
+		a.src_hdfs_version as srcHdfsVersion,
+		a.output_dir as outPutDir,
+		a.log_dir as logDir,
+		a.copy_num as copyNum,
+		a.is_override as isOverride,
+		a.STATUS as status,
+		a.REMARKS AS "remarks",
+		a.SORT_NUM as sortNum,
+		a.CREATE_BY AS "createBy.id",
+		a.CREATE_DATE as "createDate",
+		a.UPDATE_BY AS "updateBy",
+		a.UPDATE_DATE AS "updateDate",
+		a.sqr AS"sqr"
+	</sql>
+	
+	<sql id="dcJobTransHdfsJoins">
+	LEFT JOIN sys_user u ON u.id = a.create_by
+	LEFT JOIN sys_office o ON o.id = u.office_id
+    </sql>
+    
+	<select id="get" resultType="dcJobTransHdfs">
+		SELECT
+			<include refid="dcJobTransHdfsColumns"/>
+		FROM dc_job_transHdfs a
+		<include refid="dcJobTransHdfsJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+	
+	<!-- 验证jobname不重复 -->
+	<select id="getJobName" resultType="dcJobTransHdfs">
+		SELECT
+			<include refid="dcJobTransHdfsColumns"/>
+		FROM dc_job_transHdfs a
+		<include refid="dcJobTransHdfsJoins"/>
+		WHERE a.job_name = #{jobName}
+		AND a.DEL_FLAG = 0
+	</select>
+    
+<!--     构建db采集对象
+	<select id="buildJobHdfs" resultType="dcJobDb2Hdfs">
+		select a.id as 'id',
+			  a.job_name as 'jobName',
+			  a.job_desc as 'jobDesc', 
+			  a.from_link as 'fromLink', 
+			  a.to_link as 'toLink',
+			  a.append_type as 'appendType',
+			  a.sort_num as sortNum,
+			  a.`STATUS` as 'status',
+			  a.REMARKS as 'remarks',
+			  b.schema_name as 'schemaName',
+			  b.table_NAME as 'tableName',
+			  b.table_sql as 'tableSql',
+			  b.table_column as 'tableColumn',
+			  b.partition_column as 'partitionColumn',
+			  b.partition_null as 'partitionNull',
+			  b.boundary_query as 'boundaryQuery',
+			  c.output_dir as 'outputDir',
+			  c.output_format as 'compresFormat' ,
+			  c.overRide_Null as 'overRideNull',
+			  c.null_value as 'nullValue',
+			  c.compres_format as 'compresFormat'
+		 from DC_JOB_TRANSDATA a
+			  left join DC_JOB_TRANSDATA_LINK_DB b on a.ID = b.job_id 
+			  LEFT JOIN DC_JOB_TRANSDATA_LINK_HDFS c on a.ID = c.job_id
+		WHERE a.ID = #{id}
+	</select> -->
+	
+	<!-- 查询数据列表 -->
+	<select id="findList" resultType="dcJobTransHdfs">
+		SELECT
+			<include refid="dcJobTransHdfsColumns"/>
+		  FROM dc_job_transHdfs a
+		  <include refid="dcJobTransHdfsJoins"/>
+		 WHERE a.DEL_FLAG = #{DEL_FLAG_NORMAL} 
+		 <choose>
+	        <when test="id !=null and id != ''">
+	            AND a.id=#{id}
+	        </when>
+	        <otherwise>
+				<if test="jobName != null and jobName != ''"> AND INSTR(a.job_name, #{jobName})>0  </if>
+	        </otherwise>
+	    </choose>
+		<!-- 数据范围过滤 -->
+		${sqlMap.dsf}
+	 ORDER BY a.UPDATE_DATE DESC
+
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_job_transHdfs(
+			id, 
+			job_name, 
+			job_desc, 
+			src_hdfs_address, 
+			src_hdfs_dir,
+			src_hdfs_version, 
+			output_dir, 
+			log_dir,
+			copy_num,
+			is_override, 
+			remarks, 
+			status, 
+			CREATE_BY, 
+			CREATE_DATE, 
+			UPDATE_BY, 
+			UPDATE_DATE,
+			sqr,
+			SORT_NUM, 
+			DEL_FLAG
+		) VALUES (
+			#{id}, 
+			#{jobName}, 
+			#{jobDesc}, 
+			#{srcHdfsAddress}, 
+			#{srcHdfsDir}, 
+			#{srcHdfsVersion}, 
+			#{outPutDir},
+			#{logDir}, 
+			#{copyNum},
+			#{isOverride}, 
+			#{remarks}, 
+			#{status}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate},
+		    #{sqr},
+			#{sortNum}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_job_transHdfs 
+		<set>
+			<if test="jobName != null"> JOB_NAME = #{jobName}, </if>
+			<if test="jobDesc != null"> JOB_DESC = #{jobDesc}, </if>
+			<if test="srcHdfsAddress != null"> SRC_HDFS_ADDRESS = #{srcHdfsAddress}, </if>
+			<if test="srcHdfsDir != null"> SRC_HDFS_DIR = #{srcHdfsDir}, </if>
+			<if test="srcHdfsVersion != null"> SRC_HDFS_VERSION = #{srcHdfsVersion}, </if>
+			<if test="outPutDir != null"> OUTPUT_DIR = #{outPutDir}, </if>
+			<if test="logDir != null"> LOG_DIR = #{logDir}, </if>
+			<if test="copyNum != null"> COPY_NUM = #{copyNum}, </if>
+			<if test="isOverride != null"> IS_OVERRIDE = #{isOverride}, </if>
+			<if test="status != null"> STATUS = #{status}, </if>
+			<if test="remarks != null"> REMARKS = #{remarks}, </if>
+			<if test="sortNum != null"> SORT_NUM = #{sortNum}, </if>
+			<if test="remarks != null"> remarks = #{remarks}, </if>
+			<if test="updateBy.id != null"> update_by = #{updateBy.id}, </if>
+			<if test="updateDate != null"> update_date = #{updateDate}, </if>
+			<if test="sqr != null"> sqr = #{sqr} </if>
+		</set>	
+		WHERE ID = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_job_transHdfs 
+		WHERE ID = #{id} 
+	</update>
+	
+	<update id="deleteByLogic">
+		UPDATE dc_job_transHdfs SET 
+			DEL_FLAG = #{DEL_FLAG_DELETE}
+		WHERE ID = #{id} 
+	</update>
+	
+</mapper>

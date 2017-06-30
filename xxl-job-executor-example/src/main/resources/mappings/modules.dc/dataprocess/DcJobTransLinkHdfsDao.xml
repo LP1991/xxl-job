@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcJobTransDataLinkHdfsDao">
+    
+	<sql id="dcJobTransDataLinkHdfsColumns">		
+		a.ID AS id,
+		a.job_id as jobId,
+		a.output_format as outputFormat,
+		a.overRide_Null as overRideNull,
+		a.null_value as nullValue,
+		a.compres_format AS compresFormat,
+		a.output_dir as outputDir,
+		a.output_table as outputTable,
+		a.is_create_table as isCreateTable,
+		a.key_field as keyField,
+		a.column_family as columnFamily,
+		a.increment_type as incrementType,
+		a.increment_field as incrementField,
+		a.increment_value as incrementValue,
+	    a.partition_field as partitionField,
+	    a.partition_value as partitionValue,
+		a.DEL_FLAG AS delFlag
+	</sql>
+	
+	<sql id="dcJobTransDataLinkHdfsJoins">
+    </sql>
+    
+	<select id="get" resultType="dcJobTransDataLinkHdfs">
+		SELECT
+			<include refid="dcJobTransDataLinkHdfsColumns"/>
+		FROM dc_job_transdata_link_hdfs a
+		<include refid="dcJobTransDataLinkHdfsJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_job_transdata_link_hdfs(
+			ID, 
+			job_id, 
+			output_format, 
+			overRide_Null, 
+			null_value, 
+			compres_format, 
+			output_dir, 
+			output_table, 
+			is_create_table, 
+			key_field, 
+			column_family, 
+			increment_type, 
+			increment_field, 
+			increment_value,
+			partition_field,
+			partition_value,
+			DEL_FLAG
+		) VALUES (
+			#{id}, 
+			#{jobId}, 
+			#{outputFormat}, 
+			#{overRideNull}, 
+			#{nullValue}, 
+			#{compresFormat}, 
+			#{outputDir}, 
+			#{outputTable}, 
+			#{isCreateTable}, 
+			#{keyField}, 
+			#{columnFamily}, 
+			#{incrementType}, 
+			#{incrementField}, 
+			#{incrementValue}, 
+			#{partitionField},
+			#{partitionValue},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_job_transdata_link_hdfs  
+		<set>
+			<if test="outputFormat != null"> output_format = #{outputFormat}, </if>
+			<if test="overRideNull != null"> overRide_Null = #{overRideNull}, </if>
+			<if test="nullValue != null"> null_value = #{nullValue}, </if>
+			<if test="compresFormat != null"> compres_format = #{compresFormat}, </if>
+			<if test="outputDir != null"> output_dir = #{outputDir}, </if>
+			<if test="outputTable != null"> output_table = #{outputTable}, </if>
+			<if test="isCreateTable != null"> is_create_table = #{isCreateTable}, </if>
+			<if test="keyField != null"> key_field = #{keyField}, </if>
+			<if test="columnFamily != null"> column_family = #{columnFamily}, </if>
+			<if test="incrementType != null"> increment_type = #{incrementType}, </if>
+			<if test="incrementField != null"> increment_field = #{incrementField}, </if>
+			<if test="incrementValue != null"> increment_value = #{incrementValue}, </if>
+			<if test="partitionField != null"> partition_field = #{partitionField}, </if>
+			<if test="partitionValue != null"> partition_value = #{partitionValue}, </if>
+		</set>
+		WHERE job_id = #{jobId}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_job_transdata_link_hdfs 
+		 WHERE job_id = #{jobId}
+	</update>
+	
+	<update id="deleteByLogic">
+		UPDATE dc_job_transdata_link_hdfs SET 
+			DEL_FLAG = #{DEL_FLAG_DELETE}
+		 WHERE job_id = #{jobId}
+	</update>
+	
+</mapper>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcTransDataSubDao">
+    
+	<sql id="dcTransDataSubColumns">		
+		a.ID AS id,
+		a.job_id as jobId,
+		a.trans_name as transName,
+		a.trans_desc as transDesc,
+		a.trans_type as transType,
+		a.trans_engine as transEngine,
+		a.trans_conn as transConn,
+		a.trans_sql as transSql,
+		a.trans_rst as transRst,
+		a.trans_filter as transFilter,
+		a.STATUS as status,
+		a.REMARKS AS "remarks",
+		a.SORT_NUM as sortNum,
+		a.CREATE_BY AS "createBy",
+		a.CREATE_DATE as "createDate",
+		a.UPDATE_BY AS "updateBy",
+		a.UPDATE_DATE AS "updateDate",
+		a.DEL_FLAG AS delFlag
+	</sql>
+	
+	<sql id="dcTransDataSubJoins">
+    </sql>
+    
+	<select id="get" resultType="dcTransDataSub">
+		SELECT
+			<include refid="dcTransDataSubColumns"/>
+		FROM dc_transData_sub a
+		WHERE a.ID = #{id}
+	</select>
+    
+	<select id="queryTransNum" resultType="integer">
+		SELECT COUNT(1) FROM DC_TRANSDATA_SUB WHERE job_id = #{jobId} AND DEL_FLAG = 0
+	</select>
+	
+	<select id="getProName" resultType="dcTransDataSub">
+		SELECT
+			<include refid="dcTransDataSubColumns"/>
+		FROM dc_transData_sub a
+		WHERE a.job_id = #{jobId}
+		  AND a.trans_name = #{transName}
+		  AND a.DEL_FLAG = 0
+	</select>
+	
+	<!-- 查询数据列表 -->
+	<select id="findList" resultType="dcTransDataSub">
+		SELECT
+			<include refid="dcTransDataSubColumns"/>
+		  FROM dc_transData_sub a WHERE DEL_FLAG = #{DEL_FLAG_NORMAL}
+		<if test="jobId != null and jobId != ''"> AND job_id = #{jobId} </if>
+		<if test="transEngine != null and transEngine != ''"> AND trans_engine = #{transEngine} </if>
+		<if test="transType != null and transType != ''"> AND a.trans_type = #{transType} </if>
+		<if test="transConn != null and transConn != ''"> AND trans_conn = #{transConn} </if>
+		<if test="transName != null and transName != ''"> AND INSTR(a.trans_name, #{transName})>0  </if>
+		<if test="transRst != null and transRst != ''"> AND instr(a.trans_rst, #{transRst})>0  </if>
+		<!-- 数据范围过滤 -->
+		ORDER BY a.SORT_NUM
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_transData_sub(
+			ID, 
+			JOB_ID, 
+			TRANS_NAME, 
+			TRANS_DESC, 
+			TRANS_TYPE,
+			TRANS_ENGINE, 
+			TRANS_CONN, 
+			TRANS_SQL, 
+			TRANS_RST, 
+			TRANS_FILTER, 
+			REMARKS, 
+			STATUS, 
+			CREATE_BY, 
+			CREATE_DATE, 
+			UPDATE_BY, 
+			UPDATE_DATE, 
+			SORT_NUM, 
+			DEL_FLAG
+		) VALUES (
+			#{id}, 
+			#{jobId}, 
+			#{transName}, 
+			#{transDesc}, 
+			#{transType}, 
+			#{transEngine}, 
+			#{transConn}, 
+			#{transSql}, 
+			#{transRst}, 
+			#{transFilter}, 
+			#{remarks}, 
+			#{status}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{sortNum}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_transData_sub 
+		<set>
+			<if test="jobId != null"> job_id = #{jobId}, </if>
+			<if test="transName != null"> trans_name = #{transName}, </if>
+			<if test="transDesc != null"> trans_desc = #{transDesc}, </if>
+			<if test="transType != null"> trans_type = #{transType}, </if>
+			<if test="transEngine != null"> trans_engine = #{transEngine}, </if>
+			<if test="transConn != null"> trans_conn = #{transConn}, </if>
+			<if test="transSql != null"> trans_sql = #{transSql}, </if>
+			<if test="transRst != null"> trans_rst = #{transRst}, </if>
+			<if test="transFilter != null"> trans_filter = #{transFilter}, </if>
+			<if test="status != null"> STATUS = #{status}, </if>
+			<if test="remarks != null"> REMARKS = #{remarks}, </if>
+			<if test="sortNum != null"> SORT_NUM = #{sortNum}, </if>
+			<if test="updateBy.id != null"> update_by = #{updateBy.id}, </if>
+			<if test="updateDate != null"> update_date = #{updateDate} </if>
+		</set>	
+		WHERE ID = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_transData_sub 
+		WHERE ID = #{id} 
+	</update>
+	
+	<update id="deleteByLogic">
+		UPDATE dc_transData_sub SET 
+			DEL_FLAG = #{DEL_FLAG_DELETE}
+		WHERE ID = #{id} 
+	</update>
+	
+</mapper>

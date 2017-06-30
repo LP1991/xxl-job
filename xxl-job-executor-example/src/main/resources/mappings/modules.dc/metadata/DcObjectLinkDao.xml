@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.metadata.dao.DcObjectLinkDao">
+    
+	<sql id="dcObjectLinkColumns">
+		a.ID AS "id",
+		a.DATA_SOURCE AS "dataSource",
+		a.PROCESS_ID AS "processId",
+		a.LINK_TYPE AS "linkType",
+		a.SRC_OBJ_ID AS "srcObjId",
+		a.TAR_OBJ_ID AS "tarObjId",
+		a.TAR_OBJ_TYPE AS "tarObjType",
+		a.RELATION_EXP as "relationExp",
+		a.TRANS_PARAM as "transParam",
+		a.LINK_JSON AS "linkJson"
+	</sql>
+	
+	<select id="get" resultType="DcObjectLink" >
+		SELECT 
+			<include refid="dcObjectLinkColumns"/>
+			,a.SORT_NUM as "sortNum"
+			,a.OUTPUT_SCRIPT as "outputScript"
+		FROM dc_obj_link a
+		WHERE 1=1
+		<if test="id != null and id != ''"> AND a.ID = #{id} </if>
+		<if test="processId != null and processId != ''"> AND a.PROCESS_ID = #{processId} </if>
+		
+	</select>
+
+	<select id="getById" resultType="DcObjectLink" >
+		SELECT
+		<include refid="dcObjectLinkColumns"/>
+		,a.SORT_NUM as "sortNum"
+		,a.OUTPUT_SCRIPT as "outputScript"
+		FROM dc_obj_link a
+		WHERE  a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DcObjectLink" >
+		SELECT 
+			<include refid="dcObjectLinkColumns"/>
+			,a.SORT_NUM as "sortNum"
+			,a.OUTPUT_SCRIPT as "outputScript"
+		  FROM dc_obj_link a
+		<where>
+			<if test="processId != null and processId != ''"> AND a.PROCESS_ID = #{processId} </if>
+			<if test="linkType != null and linkType != ''"> AND a.LINK_TYPE = #{linkType} </if>
+			<if test="dataSource != null and dataSource != ''"> AND a.DATA_SOURCE = #{dataSource} </if>
+		</where>
+		ORDER BY a.SORT_NUM
+	</select>
+	
+	<select id="getByParam" resultType="DcObjectLink" >
+		SELECT 
+			<include refid="dcObjectLinkColumns"/>
+		FROM dc_obj_link a
+	  <where> 
+	    <if test="dataSource != null and dataSource!=''"> DATA_SOURCE = #{dataSource} </if> 
+	    <if test="processId != null and processId != ''"> AND PROCESS_ID = #{processId} </if>
+	    <if test="linkType != null and linkType != ''"> AND LINK_TYPE = #{linkType} </if>
+	    <if test="srcObjId != null and srcObjId != ''"> AND SRC_OBJ_ID = #{srcObjId} </if>
+	    <if test="tarObjId != null and tarObjId != ''"> AND TAR_OBJ_ID = #{tarObjId} </if>
+	    <if test="tarObjType != null and tarObjType != ''"> AND TAR_OBJ_TYPE = #{tarObjType} </if>
+	    <if test="transParam != null and transParam != ''"> AND TRANS_PARAM = #{transParam} </if>
+	  </where>
+	</select>
+
+		
+	<insert id="insert">
+		INSERT INTO dc_obj_link(
+			ID,
+			DATA_SOURCE,
+			PROCESS_ID,
+			LINK_TYPE,
+			SRC_OBJ_ID,
+			TAR_OBJ_ID,
+			TAR_OBJ_TYPE,
+			RELATION_EXP,
+			TRANS_PARAM,
+			LINK_JSON,
+			SORT_NUM,
+			OUTPUT_SCRIPT
+		) VALUES (
+			#{id},
+			#{dataSource},
+			#{processId},
+			#{linkType},
+			#{srcObjId},
+			#{tarObjId},
+			#{tarObjType},
+			#{relationExp},
+			#{transParam},
+			#{linkJson},
+			#{sortNum},
+			#{outputScript}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_obj_link 
+		<trim prefix="set" suffixOverrides=",">
+			<if test="dataSource != null"> DATA_SOURCE = #{dataSource}, </if>
+			<if test="processId != null"> PROCESS_ID = #{processId}, </if>
+			<if test="linkType != null"> LINK_TYPE = #{linkType}, </if>
+			<if test="srcObjId != null"> SRC_OBJ_ID = #{srcObjId}, </if>
+			<if test="tarObjId != null"> TAR_OBJ_ID = #{tarObjId}, </if>
+			<if test="tarObjType != null"> TAR_OBJ_TYPE = #{tarObjType}, </if>
+			<if test="relationExp != null"> RELATION_EXP = #{relationExp}, </if>
+			<if test="transParam != null"> TRANS_PARAM = #{transParam}, </if>
+			<if test="linkJson != null"> LINK_JSON = #{linkJson}, </if>
+			<if test="sortNum != null"> SORT_NUM = #{sortNum}, </if>
+			<if test="outputScript != null"> OUTPUT_SCRIPT = #{outputScript} </if>
+		</trim>
+		WHERE ID = #{id}
+	</update>
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_obj_link WHERE ID = #{id}
+	</update>
+	
+	<!--根据处理过程Id 删除-->
+	<update id="deleteByProcessId">
+		DELETE FROM dc_obj_link WHERE PROCESS_ID = #{processId}
+	</update>
+	
+	<!-- 批量插入链路关系 -->
+	<insert id="batchInsert" parameterType="java.util.List">
+		INSERT INTO dc_obj_link (
+			ID,
+			DATA_SOURCE,
+			PROCESS_ID,
+			LINK_TYPE,
+			SRC_OBJ_ID,
+			TAR_OBJ_ID,
+			TAR_OBJ_TYPE,
+			RELATION_EXP,
+			TRANS_PARAM,
+			LINK_JSON,
+			SORT_NUM,
+			OUTPUT_SCRIPT
+		) values
+		<foreach collection="list" item="item" index="index" separator="," >  
+		(  #{item.id, jdbcType=VARCHAR},
+		   #{item.dataSource, jdbcType=VARCHAR},
+		   #{item.processId, jdbcType=VARCHAR},
+		   #{item.linkType, jdbcType=VARCHAR},
+		   #{item.srcObjId, jdbcType=VARCHAR},
+		   #{item.tarObjId, jdbcType=VARCHAR},
+		   #{item.tarObjType, jdbcType=VARCHAR},
+		   #{item.relationExp, jdbcType=VARCHAR},
+		   #{item.transParam, jdbcType=VARCHAR},
+		   #{item.linkJson, jdbcType=VARCHAR},
+		   #{item.sortNum, jdbcType=INTEGER},
+		   #{item.outputScript, jdbcType=VARCHAR}
+		)
+		</foreach> 
+	</insert>
+	
+	<!-- 判断是否存在某条数据 -->
+	<select id="getCountByObjId" parameterType="java.util.List" resultType="java.util.List">
+	SELECT
+	count(*) as count,
+	id as id
+	FROM
+	dc_obj_link
+	WHERE
+	SRC_OBJ_ID = #{srcObjId}
+	AND TAR_OBJ_ID = #{tarObjId}
+</select>
+</mapper>

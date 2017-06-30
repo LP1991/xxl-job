@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.dataprocess.dao.DcJobHdfslogDao">
+    
+	<sql id="dcJobHdfslogColumns">
+		a.job_id AS "jobId",
+		a.fullpath AS "fullpath",
+		a.status AS "status",
+		DATE_FORMAT(a.upload_time, '%Y-%c-%e %k:%i:%s') as "uploadTime"
+	</sql>
+	
+	<sql id="dcJobHdfslogJoins">
+	</sql>
+    
+	<select id="get" resultType="DcJobHdfslog" >
+		SELECT 
+			<include refid="dcJobHdfslogColumns"/>
+		FROM dc_job_hdfslog a
+		<include refid="dcJobHdfslogJoins"/>
+		WHERE a.job_id = #{jobId}
+	</select>
+	
+	<select id="getFullPath" resultType="DcJobHdfslog" >
+		SELECT 
+			<include refid="dcJobHdfslogColumns"/>
+		FROM dc_job_hdfslog a
+		<include refid="dcJobHdfslogJoins"/>
+		WHERE a.job_id = #{jobId}
+		AND a.upload_time = #{uploadTime}
+	</select>
+	
+	<select id="findList" resultType="DcJobHdfslog" >
+		SELECT 
+			<include refid="dcJobHdfslogColumns"/>
+		FROM dc_job_hdfslog a
+		<include refid="dcJobHdfslogJoins"/>
+		<where>
+			a.job_id = #{jobId}
+		</where>	
+		order by a.upload_time asc
+	</select>
+	
+	<select id="findAllList" resultType="DcJobHdfslog" >
+		SELECT 
+			<include refid="dcJobHdfslogColumns"/>
+		FROM dc_job_hdfslog a
+		<include refid="dcJobHdfslogJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_job_hdfslog(
+			job_id,
+			fullpath,
+			status,
+			upload_time
+		) VALUES (
+			#{jobId},
+			#{fullpath},
+			#{status},
+			#{uploadTime}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_job_hdfslog SET 	
+			id = #{id},
+			create_by = #{createBy.id},
+			create_date = #{createDate},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			del_flag = #{delFlag},
+			description = #{description},
+			jobname = #{jobname}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_job_hdfslog
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE dc_job_hdfslog SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="DcJobHdfslog" statementType="STATEMENT">
+		select * FROM dc_job_hdfslog  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

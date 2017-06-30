@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.metadata.dao.DcObjectInterfaceDao">
+    <sql id="interfaces4esColumns">
+        group_concat(CONCAT(cata.CATA_FULLPATH,cata.ID)separator ';') as catalogsPath,
+        interface.INTFC_TYPE AS intfcType,
+        interface.INTFC_PROTOCAL AS intfcProtocal,
+        interface.INTFC_SRC_ID AS intfcSrcId,
+        interface.INTFC_NAMESPACE AS intfcNamespace,
+        interface.INTFC_USER AS intfcUser,
+        interface.INTFC_PSWD AS intfcPswd,
+        interface.REMARKS AS aremarks,
+        interface.INTFC_METHOD AS intfcMethod,
+        interface.INTFC_CALLTYPE AS intfcCalltype,
+        interface.INTFC_CONTYPE AS intfcContype,
+        interface.INTFC_PARAMS AS intfcParams,
+        interface.INTFC_FIELDS AS intfcFields,
+        interface.ORDER_FIELDS AS orderFields,
+        obj.ID AS id,
+        obj.OBJ_CODE AS objCode,
+        obj.OBJ_NAME AS objName,
+        obj.OBJ_TYPE AS objType,
+        obj.OBJ_DESC AS objDesc,
+        obj.SYSTEM_ID AS systemId,
+        obj.MANAGER_PER AS managerPer,
+        obj.MANAGER_ORG AS managerOrg,
+        obj.REMARKS AS bremarks,
+        obj.SORT_NUM AS sortNum,
+        obj.CREATE_BY AS createBy,
+        obj.CREATE_DATE AS createDate,
+        obj.UPDATE_BY AS updateBy,
+        obj.UPDATE_DATE AS updateDate
+    </sql>
+
+    <sql id="interfaceJoinsWithCataDetail">
+        INNER JOIN dc_obj_interface interface ON interface.OBJ_ID = obj.ID INNER JOIN dc_obj_cata_ref ref on ref.OBJ_ID = obj.ID INNER JOIN dc_cata_detail cata on cata.ID = ref.CATA_ID
+    </sql>
+
+    <!-- es -->
+    <select id="getInterfaces4es" resultType="java.util.HashMap" >
+        SELECT
+        <include refid="interfaces4esColumns"/>
+        FROM dc_obj_main obj
+        <include refid="interfaceJoinsWithCataDetail"/>
+        <where>
+            obj.DEL_FLAG = '0' AND obj.OBJ_TYPE = #{OBJ_TYPE_INTER}
+            <if test="id != null and id != ''"> AND obj.ID = #{id}</if>
+        </where>
+        GROUP BY obj.ID
+    </select>
+
+    <!-- 元数据main对象 add by peijd -->
+    <sql id="DcObjectMainColumns">
+        m.OBJ_CODE AS "objCode",
+        m.OBJ_NAME AS "objName",
+        m.OBJ_TYPE AS "objType",
+        m.SYSTEM_ID AS "systemId",
+        m.OBJ_DESC AS "objDesc",
+        m.JOB_ID AS "jobId",
+        m.JOB_SRC_FLAG AS "jobSrcFlag",
+        m.MANAGER_PER AS "managerPer",
+        m.MANAGER_ORG AS "managerOrg",
+        m.status AS "status",
+        m.create_by AS "createBy.id",
+        m.create_date AS "createDate",
+        m.update_by AS "updateBy.id",
+        m.update_date AS "updateDate",
+        m.del_flag AS "delFlag",
+    </sql>
+    <!-- 接口对象 add by peijd -->
+    <sql id="DcObjectInterfaceColumns">
+        a.obj_id AS "id",
+        a.obj_id AS "objId",
+        a.intfc_type AS "intfcType",
+        a.intfc_protocal AS "intfcProtocal",
+        a.intfc_src_id AS "intfcSrcId",
+        a.intfc_url AS "intfcUrl",
+        a.intfc_namespace AS "intfcNamespace",
+        a.intfc_user AS "intfcUser",
+        a.intfc_pswd AS "intfcPswd",
+        a.intfc_method AS "intfcMethod",
+        a.intfc_calltype AS "intfcCalltype",
+        a.intfc_contype AS "intfcContype",
+        a.intfc_params AS "intfcParams",
+        a.intfc_fields AS "intfcFields",
+        a.ORDER_FIELDS AS "orderFields",
+        a.remarks AS "remarks"
+    </sql>
+
+    <sql id="DcObjectInterfaceJoins">
+        LEFT JOIN sys_user u ON u.id = m.create_by
+        LEFT JOIN sys_office o ON o.id = u.office_id
+    </sql>
+
+    <select id="get" resultType="DcObjectInterface" >
+        SELECT
+        <include refid="DcObjectMainColumns"/>
+        <include refid="DcObjectInterfaceColumns"/>
+        ,u.id as "user.id"
+        ,u.name as "user.name"
+        ,o.id as "office.id"
+        ,o.name as "office.name"
+        FROM dc_obj_interface a
+        LEFT JOIN dc_obj_main m on a.OBJ_ID = m.id
+        LEFT JOIN sys_user u ON u.id = m.MANAGER_PER
+        LEFT JOIN sys_office o ON o.id = m.MANAGER_ORG
+        WHERE a.OBJ_ID = #{id}
+    </select>
+
+    <!-- 构建完整的数据对象  -->
+    <select id="buildIntfInfo" resultType="DcObjectInterface" >
+        SELECT
+        <include refid="DcObjectMainColumns"/>
+        <include refid="DcObjectInterfaceColumns"/>
+        ,u1.id as "user.id"
+        ,u1.name as "user.name"
+        ,o1.id as "office.id"
+        ,o1.name as "office.name"
+        FROM dc_obj_interface a
+        LEFT JOIN dc_obj_main m on a.OBJ_ID = m.id
+        LEFT JOIN sys_user u1 ON u1.id = m.MANAGER_PER
+        LEFT JOIN sys_office o1 ON o1.id = m.MANAGER_ORG
+        <include refid="DcObjectInterfaceJoins"/>
+        WHERE a.OBJ_ID = #{id} OR a.intfc_src_id = #{id}
+    </select>
+
+    <!-- 构建数据表对象列表 peijd -->
+    <select id="buildTableInfoList" resultType="DcObjectInterface" >
+        SELECT
+          <include refid="DcObjectMainColumns"/>
+          <include refid="DcObjectInterfaceColumns"/>
+        FROM dc_obj_interface a
+        LEFT JOIN dc_obj_main m on a.OBJ_ID = m.id
+        <include refid="DcObjectInterfaceJoins"/>
+        <where>
+            <if test="intfcType != null and intfcType != ''"> AND a.intfc_type=#{intfcType} </if>
+            <if test="intfcMethod != null and intfcMethod != ''"> AND a.intfc_method=#{intfcMethod} </if>
+            <if test="intfcCalltype != null and intfcCalltype != ''"> AND a.intfc_calltype=#{intfcCalltype} </if>
+            <if test="intfcContype != null and intfcContype != ''"> AND a.intfc_contype=#{intfcContype} </if>
+            <if test="objType != null and objType != ''"> AND m.OBJ_TYPE=#{objType} </if>
+        </where>
+        ${sqlMap.dsf}
+        ORDER BY m.update_date desc
+    </select>
+
+    <select id="findList" resultType="DcObjectInterface" >
+        select
+            m.OBJ_CODE AS "objCode",
+            m.OBJ_NAME AS "objName",
+            m.OBJ_TYPE AS "objType",
+            m.SYSTEM_ID AS "systemId",
+            m.OBJ_DESC AS "objDesc",
+            m.MANAGER_PER AS "managerPer",
+            m.MANAGER_ORG AS "managerOrg",
+            m.status AS "status",
+            m.create_by AS "createBy.id",
+            m.create_date AS "createDate",
+            m.update_by AS "updateBy.id",
+            m.update_date AS "updateDate",
+            m.del_flag AS "delFlag",
+            <include refid="DcObjectInterfaceColumns"/>
+            ,u1.id as "user.id"
+            ,u1.name as "user.name"
+            ,o1.id as "office.id"
+            ,o1.name as "office.name"
+        FROM dc_obj_interface a
+        LEFT JOIN dc_obj_main m on a.OBJ_ID = m.id
+        <include refid="DcObjectInterfaceJoins"/>
+        LEFT JOIN sys_user u1 ON u1.id = m.MANAGER_PER
+        LEFT JOIN sys_office o1 ON o1.id = m.MANAGER_ORG
+        <where>
+            <if test="objName != null and objName != ''"> AND INSTR(m.OBJ_NAME, #{objName})  </if>
+            <if test="objCode != null and objCode != ''"> AND INSTR (m.OBJ_CODE, #{objCode}) </if>
+            <if test="intfcType != null and intfcType != ''"> AND a.intfc_type=#{intfcType} </if>
+            <if test="intfcMethod != null and intfcMethod != ''"> AND a.intfc_method=#{intfcMethod} </if>
+            <if test="intfcCalltype != null and intfcCalltype != ''"> AND a.intfc_calltype=#{intfcCalltype} </if>
+            <if test="intfcContype != null and intfcContype != ''"> AND a.intfc_contype=#{intfcContype} </if>
+            <if test="intfcSrcId != null and intfcSrcId != ''"> AND a.intfc_src_id=#{intfcSrcId} </if>
+        </where>
+        ${sqlMap.dsf}
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''">
+                ORDER BY ${page.orderBy}
+            </when>
+        </choose>
+        ORDER BY  m.update_date desc
+    </select>
+
+    <!-- 查看我申请的接口数据 -->
+    <select id="findMyDataList" resultType="DcObjectInterface" >
+        select
+            m.OBJ_CODE AS "objCode",
+            m.OBJ_NAME AS "objName",
+            m.OBJ_TYPE AS "objType",
+            m.SYSTEM_ID AS "systemId",
+            m.OBJ_DESC AS "objDesc",
+            m.MANAGER_PER AS "managerPer",
+            m.MANAGER_ORG AS "managerOrg",
+            m.status AS "status",
+            m.create_by AS "createBy.id",
+            m.create_date AS "createDate",
+            m.update_by AS "updateBy.id",
+            m.update_date AS "updateDate",
+            m.del_flag AS "delFlag",
+            <include refid="DcObjectInterfaceColumns"/>
+            ,t.DATA_SRC AS applySrc
+            ,u1.id as "user.id"
+            ,u1.name as "user.name"
+            ,o1.id as "office.id"
+            ,o1.name as "office.name"
+        FROM dc_obj_interface a
+        LEFT JOIN dc_obj_main m on a.OBJ_ID = m.id
+        LEFT JOIN sys_user u1 ON u1.id = m.MANAGER_PER
+        LEFT JOIN sys_office o1 ON o1.id = m.MANAGER_ORG
+        RIGHT JOIN dc_intf_visit_list t on a.OBJ_ID=t.OBJ_ID
+        <where>
+            t.DEL_FLAG='0'
+            <if test="objName != null and objName != ''"> AND INSTR(m.OBJ_NAME, #{objName})  </if>
+            <if test="objCode != null and objCode != ''"> AND INSTR (m.OBJ_CODE, #{objCode}) </if>
+            <if test="intfcType != null and intfcType != ''"> AND a.intfc_type=#{intfcType} </if>
+            <if test="intfcMethod != null and intfcMethod != ''"> AND a.intfc_method=#{intfcMethod} </if>
+            <if test="intfcCalltype != null and intfcCalltype != ''"> AND a.intfc_calltype=#{intfcCalltype} </if>
+            <if test="intfcContype != null and intfcContype != ''"> AND a.intfc_contype=#{intfcContype} </if>
+            <if test="intfcSrcId != null and intfcSrcId != ''"> AND a.intfc_src_id=#{intfcSrcId} </if>
+            <if test="applySrc != null and applySrc != ''"> AND t.DATA_SRC=#{applySrc} </if>
+            <if test="applyUserId != null and applyUserId != ''"> AND t.USER_ID=#{applyUserId} </if>
+        </where>
+        ORDER BY m.update_date desc
+    </select>
+
+    <insert id="insert">
+        INSERT INTO dc_obj_interface(
+        OBJ_ID,
+        intfc_type,
+        intfc_src_id,
+        intfc_protocal,
+        intfc_url,
+        intfc_namespace,
+        intfc_user,
+        intfc_pswd,
+        intfc_method,
+        intfc_calltype,
+        intfc_contype,
+        intfc_params,
+        intfc_fields,
+        order_fields,
+        REMARKS
+        ) VALUES (
+        #{objId},
+        #{intfcType},
+        #{intfcSrcId},
+        #{intfcProtocal},
+        #{intfcUrl},
+        #{intfcNamespace},
+        #{intfcUser},
+        #{intfcPswd},
+        #{intfcMethod},
+        #{intfcCalltype},
+        #{intfcContype},
+        #{intfcParams},
+        #{intfcFields},
+        #{orderFields},
+        #{remarks}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE dc_obj_interface
+        <trim prefix="set" suffixOverrides=",">
+            <if test="intfcType != null"> intfc_type = #{intfcType}, </if>
+            <if test="intfcSrcId != null"> intfc_src_id = #{intfcSrcId}, </if>
+            <if test="intfcProtocal != null"> intfc_protocal = #{intfcProtocal}, </if>
+            <if test="intfcUrl != null"> intfc_url = #{intfcUrl}, </if>
+            <if test="intfcNamespace != null"> intfc_namespace = #{intfcNamespace}, </if>
+            <if test="intfcUser != null"> intfc_user = #{intfcUser}, </if>
+            <if test="intfcPswd != null"> intfc_pswd = #{intfcPswd}, </if>
+            <if test="intfcMethod != null"> intfc_method = #{intfcMethod}, </if>
+            <if test="remarks != null"> REMARKS = #{remarks}, </if>
+            <if test="intfcCalltype != null"> intfc_calltype = #{intfcCalltype}, </if>
+            <if test="intfcContype != null"> intfc_contype = #{intfcContype}, </if>
+            <if test="intfcParams != null"> intfc_params = #{intfcParams}, </if>
+            <if test="intfcFields != null"> intfc_fields = #{intfcFields}, </if>
+            <if test="orderFields != null"> order_fields = #{orderFields}, </if>
+        </trim>
+        WHERE OBJ_ID = #{objId}
+    </update>
+
+
+    <!--物理删除-->
+    <update id="delete">
+        DELETE FROM dc_obj_interface
+        WHERE OBJ_ID = #{objId}
+    </update>
+
+</mapper>

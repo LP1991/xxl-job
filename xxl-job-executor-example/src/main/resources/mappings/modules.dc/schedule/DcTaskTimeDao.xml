@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.schedule.dao.DcTaskTimeDao">
+    
+	<sql id="dcTaskTimeColumns">		
+		a.ID AS id,
+		a.SCHEDULE_NAME AS "scheduleName",
+		a.SCHEDULE_EXPR AS "scheduleExpr",
+		a.URL_LINK AS "urlLink",
+		a.SCHEDULE_DESC AS "scheduleDesc",
+		a.TRIGGER_TYPE AS "triggerType",
+		a.STATUS AS "status",
+		a.nexttime AS "nexttime",
+		a.RESULT AS  "result",
+		a.taskfromtype AS  "taskfromtype",
+		a.taskfromid AS  "taskfromid",
+		a.taskfromname AS  "taskfromname",
+		a.CREATE_BY AS "createBy.id",
+		a.CREATE_DATE AS "create_date",
+		a.UPDATE_BY AS "updateBy.id",
+		a.UPDATE_DATE AS "update_date"
+	</sql>
+	
+	<sql id="dcTaskTimeJoins">
+	LEFT JOIN sys_user u ON u.id = a.create_by
+	LEFT JOIN sys_office o ON o.id = u.office_id
+	</sql>
+	
+	<select id="get" resultType="DcTaskTime">
+		SELECT
+			<include refid="dcTaskTimeColumns"/>
+		FROM dc_task_time a
+		<include refid="dcTaskTimeJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+	
+	<select id="getByTaskfromid" resultType="DcTaskTime">
+		SELECT
+			<include refid="dcTaskTimeColumns"/>
+		FROM dc_task_time a
+		<include refid="dcTaskTimeJoins"/>
+		WHERE a.taskfromid = #{taskfromid} 
+		AND
+		 a.del_flag = #{DEL_FLAG_NORMAL}
+	</select>
+
+	<select id="findList" resultType="DcTaskTime">
+		SELECT
+			<include refid="dcTaskTimeColumns"/>
+		FROM dc_task_time a
+		<include refid="dcTaskTimeJoins"/>
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+		<if test="scheduleName != null and scheduleName != ''"> AND a.SCHEDULE_NAME like CONCAT('%', #{scheduleName}, '%') </if>
+		<if test="scheduleDesc != null and scheduleDesc != ''"> AND a.SCHEDULE_DESC like CONCAT('%', #{scheduleDesc}, '%') </if>
+		<if test="taskfromtype != null and taskfromtype != ''"> AND a.taskfromtype = #{taskfromtype} </if>
+		<if test="taskfromid != null and taskfromid != ''"> AND a.taskfromid = #{taskfromid} </if>
+		<if test="status != null and status != ''"> AND a.STATUS = #{status} </if>
+		<if test="triggerType != null and triggerType != ''"> AND a.TRIGGER_TYPE = #{triggerType} </if>
+		${sqlMap.dsf}
+		order by a.update_date desc
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_task_time(
+			ID, 
+			SCHEDULE_NAME, 
+			SCHEDULE_EXPR,
+			URL_LINK,
+			SCHEDULE_DESC, 
+			TRIGGER_TYPE,
+			STATUS, 
+			RESULT,
+			nexttime,
+			taskfromtype,
+			taskfromid,
+			taskfromname,
+			CREATE_BY, 
+			CREATE_DATE, 
+			UPDATE_BY, 
+			UPDATE_DATE
+		) VALUES (
+			#{id}, 
+			#{scheduleName}, 
+			#{scheduleExpr},
+			#{urlLink},
+			#{scheduleDesc}, 
+			#{triggerType}, 
+			#{status}, 
+			#{result}, 
+			#{nexttime}, 
+			#{taskfromtype}, 
+			#{taskfromid}, 
+			#{taskfromname}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}
+		)
+	</insert>
+	
+		<select id="getScheduleName" resultType="DcTaskTime">
+		SELECT
+			a.SCHEDULE_NAME AS "scheduleName" 
+		FROM dc_task_time a 
+		WHERE a.SCHEDULE_NAME = #{scheduleName}
+	</select>
+	
+	<update id="update">
+		UPDATE dc_task_time SET 
+			<if test="scheduleName != null"> SCHEDULE_NAME = #{scheduleName}, </if>
+			<if test="urlLink != null"> URL_LINK = #{urlLink}, </if>
+			<if test="scheduleExpr != null"> SCHEDULE_EXPR = #{scheduleExpr}, </if>
+			<if test="scheduleDesc != null"> SCHEDULE_DESC = #{scheduleDesc}, </if>  
+			<if test="triggerType != null"> TRIGGER_TYPE = #{triggerType}, </if>  
+			<if test="status != null"> STATUS = #{status}, </if>  
+			<if test="result != null"> RESULT= #{result}, </if>  
+			<if test="nexttime != null"> nexttime= #{nexttime}, </if>  
+			<if test="updateBy.id != null"> UPDATE_BY = #{updateBy.id}, </if>  
+			<if test="updateDate != null"> UPDATE_DATE = #{updateDate} </if>  
+		WHERE ID = #{id}
+	</update>
+	
+	<update id="updateStatus">
+	UPDATE dc_task_time SET 
+		STATUS = #{status}
+	WHERE ID = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_task_time 
+		WHERE ID = #{id}  
+	</update>
+	
+	<select id="buildTaskContent" resultType="DcTaskContent">
+		SELECT
+	    b.nexttime as 'nextTime',
+			<include refid="dcTaskTimeColumns"/>
+		 from dc_task_time a
+			  LEFT JOIN dc_task_log_next b on a.id = b.taskid
+		WHERE a.id = #{id}
+	</select>
+	
+</mapper>

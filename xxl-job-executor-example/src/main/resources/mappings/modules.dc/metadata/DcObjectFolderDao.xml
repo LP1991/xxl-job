@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.metadata.dao.DcObjectFolderDao">
+    
+	<sql id="dcObjectFolderColumns">
+		a.OBJ_ID AS "id",
+		a.FOLDER_NAME AS "folderName",
+		a.FOLDER_URL AS "folderUrl",
+		a.IS_STRUCT AS "isStruct",
+		a.REMARKS AS "remarks"
+	</sql>
+
+	<sql id="dcObjectFolderColumnsTwo">
+		a.OBJ_ID AS "id",
+		a.FOLDER_NAME AS "fileName",
+		a.FOLDER_URL AS "fileUrl",
+		a.IS_STRUCT AS "isStruct",
+		a.REMARKS AS "remarks"
+	</sql>
+	<sql id="folders4esColumns">
+		group_concat(CONCAT(cata.CATA_FULLPATH,cata.ID) separator ';') as catalogsPath,
+		obj.ID AS id,
+		obj.OBJ_CODE AS objCode,
+		obj.OBJ_NAME AS objName,
+		obj.OBJ_TYPE AS objType,
+		obj.SYSTEM_ID AS systemId,
+		obj.OBJ_DESC AS objDesc,
+		obj.MANAGER_PER AS managerPer,
+		obj.MANAGER_ORG AS managerOrg,
+		obj.REMARKS AS remarks,
+		obj.SORT_NUM AS sortNum,
+		obj.CREATE_BY AS createBy,
+		obj.CREATE_DATE AS createDate,
+		obj.UPDATE_BY AS updateBy,
+		obj.UPDATE_DATE AS updateDate,
+		folder.FOLDER_NAME AS folderName,
+		folder.FOLDER_URL AS folderUrl,
+		folder.IS_STRUCT AS isStruct,
+		folder.REMARKS AS remarks
+	</sql>
+
+	<sql id="folderJoinsWithCataDetail">
+		INNER JOIN dc_obj_folder folder ON folder.OBJ_ID = obj.ID INNER JOIN dc_obj_cata_ref ref on ref.OBJ_ID = obj.ID INNER JOIN dc_cata_detail cata on cata.ID = ref.CATA_ID
+	</sql>
+	<sql id="dcObjectFolderJoins">
+	</sql>
+    
+	<select id="get" resultType="DcObjectFolder" >
+		SELECT 
+			<include refid="dcObjectFolderColumns"/>
+		FROM dc_obj_folder a
+		<include refid="dcObjectFolderJoins"/>
+		WHERE a.OBJ_ID = #{id}
+	</select>
+		
+	<insert id="insert">
+		INSERT INTO dc_obj_folder(
+			OBJ_ID,
+			FOLDER_NAME,
+			FOLDER_URL,
+			IS_STRUCT,
+			REMARKS
+		) VALUES (
+			#{id},
+			#{folderName},
+			#{folderUrl},
+			#{isStruct},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE dc_obj_folder 
+		<trim prefix="set" suffixOverrides=",">
+			<if test="id != null"> OBJ_ID = #{id}, </if>
+			<if test="folderName != null"> FOLDER_NAME = #{folderName}, </if>
+			<if test="folderUrl != null"> FOLDER_URL = #{folderUrl}, </if>
+			<if test="isStruct != null"> IS_STRUCT = #{isStruct}, </if>
+			<if test="remarks != null"> REMARKS = #{remarks}, </if>
+		</trim>
+		WHERE OBJ_ID = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM dc_obj_folder
+		WHERE OBJ_ID = #{id}
+	</update>
+	
+		<select id="getFolderUrl" resultType="DcObjectFolder" >
+		SELECT 
+			<include refid="dcObjectFolderColumns"/>
+		FROM dc_obj_folder a
+		<include refid="dcObjectFolderJoins"/>
+		WHERE a.FOLDER_URL = #{folderUrl}
+	</select>
+	
+	<!-- 根据名字删除路径记录 -->
+	<update id="deleteName">
+		DELETE FROM dc_obj_folder
+		WHERE FOLDER_NAME = #{folderName}
+	</update>
+
+	<!-- es -->
+	<select id="getFolders4es" resultType="java.util.HashMap" >
+		SELECT
+		<include refid="folders4esColumns"/>
+		FROM dc_obj_main obj
+		<include refid="folderJoinsWithCataDetail"/>
+		<where>
+			obj.DEL_FLAG = '0' AND obj.OBJ_TYPE = #{OBJ_TYPE_FOLDER}
+			<if test="id != null and id != ''"> AND obj.ID = #{id}</if>
+		</where>
+		GROUP BY obj.ID
+	</select>
+
+	<!-- 构建文件夹对象列表 hgw -->
+	<select id="buildFolderInfo" resultType="DcObjectFileInfo" >
+		SELECT
+		m.OBJ_CODE AS "objCode",
+		m.OBJ_NAME AS "objName",
+		m.OBJ_TYPE AS "objType",
+		m.SYSTEM_ID AS "systemId",
+		m.OBJ_DESC AS "objDesc",
+		m.MANAGER_PER AS "managerPer",
+		m.MANAGER_ORG AS "managerOrg",
+		m.JOB_ID AS "jobId",
+		m.JOB_TYPE AS "jobType",
+		m.JOB_SRC_FLAG AS "jobSrcFlag",
+		m.sort_Num AS "sortNum",
+		m.status AS "status",
+		m.create_by AS "createBy.id",
+		m.create_date AS "createDate",
+		m.update_by AS "updateBy.id",
+		m.update_date AS "updateDate",
+		m.del_flag AS "delFlag",
+		u2.id AS "user.id",
+		u2. NAME AS "user.name",
+		o2.id AS "office.id",
+		o2. NAME AS "office.name",
+		<include refid="dcObjectFolderColumnsTwo"/>
+		FROM dc_obj_folder a
+		LEFT JOIN dc_obj_main m on a.OBJ_ID = m.id
+		LEFT JOIN sys_user u ON u.id = m.create_by
+		LEFT JOIN sys_office o ON o.id = u.office_id
+		LEFT JOIN sys_user u2 ON u2.id = m.MANAGER_PER
+		LEFT JOIN sys_office o2 ON o2.id = m.MANAGER_ORG
+		<include refid="dcObjectFolderJoins"/>
+		WHERE a.OBJ_ID = #{id}
+	</select>
+</mapper>

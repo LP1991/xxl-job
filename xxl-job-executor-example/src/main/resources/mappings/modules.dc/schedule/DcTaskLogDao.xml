@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.schedule.dao.DcTaskLogDao">
+    
+	<sql id="dcTaskLogColumns">		
+		a.id AS id,
+		a.className AS "className",
+		a.methodName AS "methodName",
+		a.status AS "status",
+		a.results AS "results",,
+		a.params AS "params",
+		a.exception AS "exception",
+		a.start_date AS "startDate",
+		a.end_date AS "endDate"
+	</sql>
+	
+	<sql id="dcTaskLogJoins"></sql>
+	
+	<select id="get" resultType="DcTaskLog">
+		SELECT
+			<include refid="dcTaskLogColumns"/>
+		FROM dc_task_log a
+		<include refid="dcTaskLogJoins"/>
+		WHERE a.ID = #{id}
+	</select>
+    
+	<select id="findList" resultType="DcTaskLog">
+		SELECT
+			<include refid="dcTaskLogColumns"/>
+		FROM dc_task_log a
+		<include refid="dcTaskLogJoins"/>
+		WHERE 1 = 1
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO dc_task_log(
+			id, 
+			className,
+			methodName, 
+			status, 
+			results,
+			params, 
+			exception, 
+			start_date, 
+			end_date
+		) VALUES (
+			#{id}, 
+			#{className}, 
+			#{methodName}, 
+			#{status},  
+			#{results}, 
+			#{params}, 
+			#{exception}, 
+			#{startDate}, 
+			#{endDate}
+		)
+	</insert>
+	
+			<select id="getDataByName" resultType="DcTaskLog">
+		SELECT
+			*
+		FROM dc_task_log a 
+		WHERE a.className = #{className}
+	</select>
+	<select id="getData" resultType="DcTaskLog">
+	select * from dc_task_log A 
+	where start_date=(select max(start_date)
+	 from dc_task_log B where A.className=B.className)
+	</select>
+		<update id="update">
+		UPDATE dc_task_log SET 
+			className = #{className}, 
+			methodName = #{methodName}, 
+			status = #{status}, 
+			results = #{results}, 
+			params = #{params}, 
+			start_date= #{startDate},
+			end_date = #{endDate},  
+			exception= #{exception}
+		WHERE ID = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM dc_task_log
+		WHERE ID = #{id} 
+	</update>
+</mapper>

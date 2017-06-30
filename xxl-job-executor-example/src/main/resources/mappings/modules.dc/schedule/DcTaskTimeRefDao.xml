@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hlframe.modules.dc.schedule.dao.DcTaskTimeRefDao">
+
+<select id="findList" resultType="DcTaskTimeRef">
+	
+		SELECT
+ a.ID as "taskId",
+b.ID as "timeId",
+a.TASK_NAME as "className",
+a.METHOD_NAME as "methodName",
+a.PARAMETER as "parameter",
+b.TRIGGER as "trigger"
+FROM  dc_task_main a, dc_task_time b
+		WHERE 1 = 1
+	</select>
+	
+		<select id="getDataByClassName" resultType="DcTaskTimeRef">
+	SELECT
+	a.ID AS "taskId",
+	b.ID AS "timeId",
+	a.TASK_NAME AS "className",
+	a.METHOD_NAME AS "methodName",
+	a.PARAMETER AS "parameter",
+	b.SCHEDULE_EXPR AS "scheduleExpr",
+	a.PRIORITY AS "priority"
+FROM
+	dc_task_main a,
+	dc_task_time b
+WHERE
+	a.TASK_NAME = #{className}
+	</select>
+</mapper>

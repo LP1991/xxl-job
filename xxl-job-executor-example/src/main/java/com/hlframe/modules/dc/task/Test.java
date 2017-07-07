@@ -52,7 +52,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 public class Test {
     private static ApplicationContext applicationContext;
     public static void upload() throws Exception {
-        applicationContext = new ClassPathXmlApplicationContext("/applicationcontext-xxl-job.xml","/spring-context-dc.xml");
+        applicationContext = new ClassPathXmlApplicationContext("/applicationcontext-job.xml","/spring-context-dc.xml");
         DcCommonService
                 service = applicationContext.getBean(DcCommonService.class);
         service.initLoadDataToEs();

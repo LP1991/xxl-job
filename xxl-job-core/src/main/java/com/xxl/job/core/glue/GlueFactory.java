@@ -87,6 +87,8 @@ public class GlueFactory {
 	// load new instance, prototype
 	public IJobHandler loadNewInstance(String codeSource) throws Exception{
 		if (codeSource!=null && codeSource.trim().length()>0) {
+			System.out.println(codeSource);
+//			groovyClassLoader.
 			Class<?> clazz = groovyClassLoader.parseClass(codeSource);
 			if (clazz != null) {
 				Object instance = clazz.newInstance();

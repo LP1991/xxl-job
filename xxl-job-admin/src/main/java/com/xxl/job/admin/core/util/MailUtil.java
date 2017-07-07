@@ -156,7 +156,7 @@ public class MailUtil {
 	public static void main(String[] args) {
 		
 		ExecutorService exec = Executors.newCachedThreadPool();
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < 4; i++) {
 			exec.execute(new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -168,7 +168,7 @@ public class MailUtil {
 								+ "></head><body><h1>新书快递通知</h1>你的新书快递申请已推送新书，请到<a href=''>空间"
 								+ "</a>中查看</body></html>";
 						
-						sendMail("ovono802302@163.com", "测试邮件", mailBody, false, null);
+						sendMail("garnett_1991@sina.com", "测试邮件", mailBody, false, null);
 						System.out.println(total);
 						total++;
 					}

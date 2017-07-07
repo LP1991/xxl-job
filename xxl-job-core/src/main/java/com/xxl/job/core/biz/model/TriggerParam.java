@@ -1,5 +1,6 @@
 package com.xxl.job.core.biz.model;
 
+
 import java.io.Serializable;
 
 /**
@@ -8,10 +9,13 @@ import java.io.Serializable;
 public class TriggerParam implements Serializable{
     private static final long serialVersionUID = 42L;
 
-    private int jobId;
+    private String taskId;
+    private String runId;
+    private String taskName; // 任务的名称，日志中使用
 
     private String executorHandler;
     private String executorParams;
+    private String paramsType; // 参数类型
     private String executorBlockStrategy;
 
     private String glueType;
@@ -19,15 +23,17 @@ public class TriggerParam implements Serializable{
     private long glueUpdatetime;
 
     private int logId;
-    private long logDateTim;
+    private long logDateTime;
 
-    public int getJobId() {
-        return jobId;
-    }
+    private String className; // 需要执行的类名
+    private String methodName; // 需要执行的方法名
+    private String scheduleExpr; // 执行时间的表达式
+    private String filePath; // 上传的文件路径
+    private String fileName; // shell的文件名 or bat的文件名
+    private String executeType; // 执行方式， 0-自动 1-手动
+    private Boolean syncFlag;	//同步标志 : true-同步执行; false-异步执行
 
-    public void setJobId(int jobId) {
-        this.jobId = jobId;
-    }
+
 
     public String getExecutorHandler() {
         return executorHandler;
@@ -85,18 +91,106 @@ public class TriggerParam implements Serializable{
         this.logId = logId;
     }
 
-    public long getLogDateTim() {
-        return logDateTim;
+    public long getLogDateTime() {
+        return logDateTime;
     }
 
-    public void setLogDateTim(long logDateTim) {
-        this.logDateTim = logDateTim;
+    public void setLogDateTime(long logDateTime) {
+        this.logDateTime = logDateTime;
+    }
+
+    public String getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
+    }
+
+    public String getRunId() {
+        return runId;
+    }
+
+    public void setRunId(String runId) {
+        this.runId = runId;
+    }
+
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
+    }
+
+    public String getParamsType() {
+        return paramsType;
+    }
+
+    public void setParamsType(String paramsType) {
+        this.paramsType = paramsType;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public void setMethodName(String methodName) {
+        this.methodName = methodName;
+    }
+
+    public String getScheduleExpr() {
+        return scheduleExpr;
+    }
+
+    public void setScheduleExpr(String scheduleExpr) {
+        this.scheduleExpr = scheduleExpr;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public String getExecuteType() {
+        return executeType;
+    }
+
+    public void setExecuteType(String executeType) {
+        this.executeType = executeType;
+    }
+
+    public Boolean getSyncFlag() {
+        return syncFlag;
+    }
+
+    public void setSyncFlag(Boolean syncFlag) {
+        this.syncFlag = syncFlag;
     }
 
     @Override
     public String toString() {
         return "TriggerParam{" +
-                "jobId=" + jobId +
+                "jobId=" + taskId +
                 ", executorHandler='" + executorHandler + '\'' +
                 ", executorParams='" + executorParams + '\'' +
                 ", executorBlockStrategy='" + executorBlockStrategy + '\'' +
@@ -104,7 +198,7 @@ public class TriggerParam implements Serializable{
                 ", glueSource='" + glueSource + '\'' +
                 ", glueUpdatetime=" + glueUpdatetime +
                 ", logId=" + logId +
-                ", logDateTim=" + logDateTim +
+                ", logDateTime=" + logDateTime +
                 '}';
     }
 }

@@ -28,7 +28,7 @@ public class DemoJobHandlerTest {
         triggerParam.setGlueSource(null);
         triggerParam.setGlueUpdatetime(System.currentTimeMillis());
         triggerParam.setLogId(1);
-        triggerParam.setLogDateTim(System.currentTimeMillis());
+        triggerParam.setLogDateTime(System.currentTimeMillis());
 
         // do remote trigger
         ExecutorBiz executorBiz = (ExecutorBiz) new NetComClientProxy(ExecutorBiz.class, "127.0.0.1:11001").getObject();

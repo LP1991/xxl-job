@@ -16,6 +16,7 @@ import com.hlframe.common.utils.SpringContextHolder;
 import com.hlframe.modules.dc.common.dao.DcDataResult;
 import com.hlframe.modules.dc.common.service.DcCommonService;
 import com.xxl.job.core.biz.model.ReturnT;
+import com.xxl.job.core.handler.annotation.JobHander;
 import org.springframework.stereotype.Service;
 
 /** 
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
  * @创建者: peijd
  * @创建时间: 2017年2月16日 下午6:10:15
  */
+@JobHander("initESService")
 @Service
 public class InitESService implements DcTaskService {
 

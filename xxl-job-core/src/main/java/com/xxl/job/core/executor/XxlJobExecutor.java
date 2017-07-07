@@ -144,7 +144,7 @@ public class XxlJobExecutor implements ApplicationContextAware, ApplicationListe
             oldJobThread.interrupt();
         }
     }
-    public static JobThread loadJobThread(int jobId){
+    public static JobThread loadJobThread(String jobId){
         JobThread jobThread = JobThreadRepository.get(jobId);
         return jobThread;
     }

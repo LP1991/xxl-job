@@ -28,4 +28,15 @@ public enum ExecutorBlockStrategyEnum {
         }
         return defaultItem;
     }
+
+    public static ExecutorBlockStrategyEnum match(int name) {
+       if (name == 1){
+           return ExecutorBlockStrategyEnum.SERIAL_EXECUTION;
+       }else if (name == 2){
+           return ExecutorBlockStrategyEnum.DISCARD_LATER;
+       }else if (name == 3){
+           return ExecutorBlockStrategyEnum.COVER_EARLY;
+       }
+       return ExecutorBlockStrategyEnum.SERIAL_EXECUTION;
+    }
 }

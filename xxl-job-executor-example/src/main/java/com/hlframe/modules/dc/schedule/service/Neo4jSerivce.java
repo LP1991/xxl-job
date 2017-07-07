@@ -9,6 +9,7 @@ import com.hlframe.modules.dc.schedule.service.task.DcTaskService;
 import com.hlframe.modules.dc.utils.DcPropertyUtils;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
+import com.xxl.job.core.handler.annotation.JobHander;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.net.URI;
 /**
  * Created by Administrator on 2017/6/23.
  */
+@JobHander("neo4jSerivce")
 @Service
 @Transactional(readOnly = true)
 public class Neo4jSerivce implements DcTaskService {

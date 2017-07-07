@@ -23,6 +23,7 @@ import com.hlframe.modules.dc.metadata.service.DcDataSourceService;
 import com.hlframe.modules.dc.utils.DcStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -36,6 +37,7 @@ import java.util.Map;
  * @创建者: peijd
  * @创建时间: 2016年11月21日 下午5:04:43
  */
+@Service
 @Transactional(readOnly = true)
 public class DbHandleService {
 	Logger logger = LoggerFactory.getLogger(getClass());

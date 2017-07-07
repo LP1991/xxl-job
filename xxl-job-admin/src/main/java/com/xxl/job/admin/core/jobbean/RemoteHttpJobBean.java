@@ -67,7 +67,7 @@ public class RemoteHttpJobBean extends QuartzJobBean {
 		triggerParam.setGlueSource(jobInfo.getGlueSource());
 		triggerParam.setGlueUpdatetime(jobInfo.getGlueUpdatetime().getTime());
 		triggerParam.setLogId(jobLog.getId());
-		triggerParam.setLogDateTim(jobLog.getTriggerTime().getTime());
+		triggerParam.setLogDateTime(jobLog.getTriggerTime().getTime());
 
 		// do trigger
 		ReturnT<String> triggerResult = doTrigger(triggerParam, jobInfo, jobLog);

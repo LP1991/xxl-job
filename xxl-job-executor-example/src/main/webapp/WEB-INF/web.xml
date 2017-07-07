@@ -10,7 +10,7 @@
 	
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
-		<param-value>classpath*:applicationcontext-*.xml,classpath*:spring-context*.xml</param-value>
+		<param-value>classpath*:applicationcontext-job.xml,classpath*:spring-context-dc.xml,classpath*:spring-context-shiro.xml</param-value>
 	</context-param>
 
 	<listener>
